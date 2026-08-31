@@ -41,6 +41,7 @@ function renderLesson(lesson, sourcesById) {
     .map((section) => `<section><h2>${escapeHtml(section.heading)}</h2><p>${escapeHtml(section.body)}</p></section>`)
     .join('\n');
   const practice = lesson.practice.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+  const artifactChecks = lesson.artifactChecklist.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
   const answers = lesson.quiz.answers
     .map((answer) => `<label class="quiz-answer"><input type="checkbox" name="answer" value="${escapeHtml(answer.id)}"> ${escapeHtml(answer.text)}</label>`)
     .join('');
@@ -54,8 +55,10 @@ function renderLesson(lesson, sourcesById) {
   <h1>${escapeHtml(lesson.title)}</h1>
   <p class="outcome"><strong>Результат:</strong> ${escapeHtml(lesson.outcome)}</p>
   <section class="retrieval"><h2>Вспомни сначала</h2><p>${escapeHtml(lesson.retrieval)}</p></section>
+  <section><h2>Как это выглядит в жизни</h2><p>${escapeHtml(lesson.lifeExample.body)}</p></section>
   ${sections}
   <section><h2>Практика</h2><ol>${practice}</ol></section>
+  <section><h2>Проверка артефакта</h2><ul>${artifactChecks}</ul></section>
   <section><h2>Проверь себя</h2><form class="quiz-form" data-quiz-lesson="${escapeHtml(lesson.id)}"><fieldset><legend>${escapeHtml(lesson.quiz.question)}</legend>${answers}</fieldset><button class="button button-primary" type="submit">Проверить ответ</button><p data-quiz-status aria-live="polite"></p></form></section>
   <section><h2>Источники</h2><ul>${sources}</ul></section>
   <section><h2>Следующее действие</h2><p>${escapeHtml(lesson.nextStep)}</p></section>
@@ -74,7 +77,7 @@ function renderReference(reference) {
 function renderSourceMap(sources) {
   const items = sources.length === 0
     ? '<li>В этом учебном примере источники ещё не добавлены.</li>'
-    : sources.map((source) => `<li id="source-${escapeHtml(source.id)}"><a href="${escapeHtml(source.url)}">${escapeHtml(source.title)}</a><br><small>Проверено: ${escapeHtml(source.accessedAt)}</small><br><small>Использовано для: ${escapeHtml(source.usedFor)}</small></li>`).join('');
+    : sources.map((source) => `<li id="source-${escapeHtml(source.id)}" class="source-card"><a href="${escapeHtml(source.url)}">${escapeHtml(source.title)}</a><br><small>Тип: ${escapeHtml(source.sourceType)}</small><br><small>Опубликовано: ${escapeHtml(source.publishedAt)}</small><br><small>Правило: ${escapeHtml(source.rule)}</small><br><small>Проверено: ${escapeHtml(source.accessedAt)}</small><br><small>Использовано для: ${escapeHtml(source.usedFor)}</small></li>`).join('');
   return `<article class="reference"><p class="eyebrow">Справочник</p><h1>Карта источников</h1><p>Замените примеры первичными источниками по теме курса и фиксируйте дату проверки.</p><ul>${items}</ul></article>`;
 }
 

@@ -15,6 +15,8 @@ const validCourse = {
     practice: ['Write the outcome once.'],
     quiz: { question: 'Which outcome is observable?', answers: [{ id: 'yes', text: 'A demonstrable action', correct: true }] },
     nextStep: 'Practice the outcome once.',
+    lifeExample: { body: 'A teammate writes the outcome before starting work.' },
+    artifactChecklist: ['The action is observable.', 'The evidence is saved.'],
     sourceIds: [],
   }],
   references: [],
@@ -136,6 +138,10 @@ test('rejects a source URL with a non-web protocol before it reaches generated h
   course.sources = [{
     id: 'unsafe',
     title: 'Unsafe source',
+    author: 'Test author',
+    publishedAt: '2026-08-01',
+    sourceType: 'Documentation',
+    rule: 'Test rule.',
     url: 'javascript:alert(document.cookie)',
     accessedAt: '2026-08-30',
     usedFor: 'Security test.',
@@ -152,6 +158,10 @@ test('rejects a source URL that would disclose embedded credentials', () => {
   course.sources = [{
     id: 'private-source',
     title: 'Private source',
+    author: 'Test author',
+    publishedAt: '2026-08-01',
+    sourceType: 'Documentation',
+    rule: 'Test rule.',
     url: 'https://alice:plain-pass@example.com/private-source',
     accessedAt: '2026-08-30',
     usedFor: 'Security test.',
@@ -168,6 +178,10 @@ test('rejects a source URL that would disclose an explicit secret query paramete
   course.sources = [{
     id: 'private-source',
     title: 'Private source',
+    author: 'Test author',
+    publishedAt: '2026-08-01',
+    sourceType: 'Documentation',
+    rule: 'Test rule.',
     url: 'https://example.com/private-source?apiKey=not-for-publication',
     accessedAt: '2026-08-30',
     usedFor: 'Security test.',
@@ -184,6 +198,10 @@ test('rejects a source URL that would disclose a signed-link parameter', () => {
   course.sources = [{
     id: 'private-source',
     title: 'Private source',
+    author: 'Test author',
+    publishedAt: '2026-08-01',
+    sourceType: 'Documentation',
+    rule: 'Test rule.',
     url: 'https://example.com/private-source?X-Amz-Credential=private-credential&X-Amz-Signature=private-signature',
     accessedAt: '2026-08-30',
     usedFor: 'Security test.',
@@ -203,4 +221,15 @@ test('requires source evidence date and narrow usage mapping', () => {
   assert.equal(result.ok, false);
   assert.ok(result.errors.includes('source Source accessed date is missing'));
   assert.ok(result.errors.includes('source Source usage mapping is missing'));
+});
+
+test('requires source author, publication date, type, and narrow rule', () => {
+  const course = structuredClone(validCourse);
+  course.sources = [{ id: 'source', title: 'Source', url: 'https://example.com/', accessedAt: '2026-08-30', usedFor: 'Security test.' }];
+  const result = validateCourse(course);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.includes('source Source author is missing'));
+  assert.ok(result.errors.includes('source Source published date is missing'));
+  assert.ok(result.errors.includes('source Source type is missing'));
+  assert.ok(result.errors.includes('source Source narrow rule is missing'));
 });
