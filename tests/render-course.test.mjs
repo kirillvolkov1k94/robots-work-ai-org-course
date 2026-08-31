@@ -6,6 +6,10 @@ import test from 'node:test';
 import { renderCourse } from '../tools/render-course.mjs';
 import { withTempDir } from './helpers.mjs';
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const course = {
   meta: { id: 'render-fixture', title: 'Render fixture', description: 'Renderer test course.', language: 'en' },
   lessons: [{
@@ -48,7 +52,7 @@ test('renders navigable pages with escaped lesson content', async () => {
     assert.match(lesson, /<main/);
     assert.match(lesson, /Вспомни сначала[\s\S]*Recall the safe output rule before reading\.[\s\S]*Part/);
     assert.match(lesson, /A coordinator uses a short written brief\./);
-    for (const item of course.lessons[0].artifactChecklist) assert.match(lesson, new RegExp(item));
+    for (const item of course.lessons[0].artifactChecklist) assert.match(lesson, new RegExp(escapeRegExp(item)));
     assert.match(lesson, /Если что-то осталось непонятным, спроси агента/);
     assert.match(lesson, /href="\.\.\/\.\.\/index\.html"/);
     assert.match(lesson, /data-quiz-lesson="safe-title"/);

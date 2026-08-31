@@ -70,3 +70,22 @@ node --test tests/*.test.mjs
 ```
 
 43 passed, 0 failed.
+
+## Fix round 2
+
+- Replaced the unescaped checklist-item regex assertion with a local `escapeRegExp` helper, so each authored value is asserted literally and regex metacharacters cannot create false positives.
+- No production changes.
+
+Verification:
+
+```text
+node --test tests/render-course.test.mjs
+```
+
+2 passed, 0 failed.
+
+```text
+node --test tests/*.test.mjs
+```
+
+43 passed, 0 failed.
