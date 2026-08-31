@@ -1,13 +1,13 @@
 {
-  "name": "Учебная система",
-  "short_name": "Учёба",
+  "name": "Роботы работают",
+  "short_name": "Роботы",
   "lang": "ru",
   "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4fbfa",
-  "theme_color": "#0f766e",
+  "background_color": "#F7F8F4",
+  "theme_color": "#12313D",
   "icons": [
     {
       "src": "assets/icons/course-icon-180.png",

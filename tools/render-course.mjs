@@ -24,15 +24,18 @@ function pageShell({ title, body, language = 'ru', assetPrefix, homePrefix, vend
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0f766e">
+    <meta name="theme-color" content="#12313D">
+    <meta name="description" content="Семь коротких уроков о безопасной организации ИИ-агентов для одного процесса студии.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" href="${assetPrefix}assets/styles.css">
     <link rel="manifest" href="${homePrefix}manifest.webmanifest">
+    <link rel="icon" href="${assetPrefix}assets/icons/course-icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="${assetPrefix}assets/icons/course-icon-180.png">
     <title>${escapeHtml(title)}</title>
   </head>
   <body>
     <a class="skip-link" href="#content">К содержанию</a>
-    <header class="site-header"><a href="${homePrefix}index.html">Учебная система</a></header>
+    <header class="site-header"><a href="${homePrefix}index.html">Роботы работают</a></header>
     <main id="content" aria-label="Материал курса">${body}</main>
     ${scripts}
   </body>
