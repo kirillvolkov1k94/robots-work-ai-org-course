@@ -7,11 +7,11 @@
 3. Просмотреть узкий мобильный layout, keyboard focus, source links, empty/error states и отсутствие service-worker fetch handler.
 4. Проверить публичные URLs источников и отсутствие секретов, free-form learner text и service-role credentials.
 
-Локальное и облачное доказательство этого этапа за 2026-09-01 находится в [VALIDATION-REPORT.md](VALIDATION-REPORT.md). Supabase уже настроен с owner-only RLS и точным production redirect; GitHub Pages настроен на ветку `main`, но этот релиз-кандидат ещё не влит и не доказан по публичному URL. Принятия на iPhone также ещё нет.
+Локальное, облачное и публичное доказательство этого этапа за 2026-09-01 находится в [VALIDATION-REPORT.md](VALIDATION-REPORT.md). Supabase настроен с owner-only RLS и точным production redirect. GitHub Pages собран из `main`; публичные главная, первый урок, manifest и service worker проверены по HTTPS. Принятия на физическом iPhone пока нет.
 
 ## Publication gate
 
-Владелец уже разрешил публикацию GitHub Pages, push и deploy в рамках этого проекта. Они всё равно выполняются отдельным проверяемым шагом; этот документ сам по себе ничего не публикует и не доказывает live-состояние.
+Владелец разрешил публикацию GitHub Pages, push и deploy в рамках этого проекта. 2026-09-01 релиз прошёл отдельным проверяемым шагом через pull request в `main`; этот документ сам по себе ничего не публикует и не заменяет live-проверку.
 
 ## Human acceptance
 

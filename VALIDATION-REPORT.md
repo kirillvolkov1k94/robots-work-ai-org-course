@@ -1,8 +1,8 @@
 # Release verification — «Роботы работают»
 
 **Checked:** 2026-09-01 (Asia/Novosibirsk)
-**Candidate branch:** `feature/robots-work-course-release`
-**Scope:** current release candidate, local static preview, authorised Supabase project configuration and read-only verification. GitHub Pages is configured for `main`; this candidate has not yet been merged or verified at the public course URL.
+**Published revision:** `23e69c2` on `main` via pull request #1
+**Scope:** released source, local static preview, authorised Supabase configuration and read-only verification, plus the public GitHub Pages URL.
 
 ## Statuses kept separate
 
@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | Locally verified | PASS | Deterministic generation, routes, full Node suite, PWA policy, assets and browser rendering were checked below. |
 | Supabase base | PARTIAL | The project, schema, owner-only RLS, URL allowlist and Email provider were checked. No magic link was sent, no owner session was completed and no authenticated cloud row was written in this run. |
-| Publicly deployed | NOT YET | GitHub Pages is configured to publish `main`, but this candidate has not yet reached `main` or been tested on its public HTTPS URL. |
+| Publicly deployed | PASS | GitHub Pages reports `built` from `main` with HTTPS enforced; root, first lesson, manifest and service worker were checked on the public HTTPS URL. |
 | Accepted on iPhone | NOT ACCEPTED | A real owner must test Safari → Add to Home Screen after public deployment. Desktop/browser emulation is not this acceptance. |
 
 ## Deterministic release checks
@@ -42,6 +42,13 @@ The candidate was served through `http://127.0.0.1:4174/`.
 - `course-icon-180.png` and `course-icon-512.png` decode as exactly `180×180` and `512×512`; the source artwork is `1254×1254`.
 - All 11 served HTML routes use `#2A1C3D` as the theme colour. The interface uses the approved lavender palette; the reviewed primary contrast combinations are 6.91:1–15.77:1 and user-visible statuses include text, not colour alone.
 
+## Public HTTPS verification
+
+- GitHub Pages reports `built` from `main` with HTTPS enforced at `https://kirillvolkov1k94.github.io/robots-work-ai-org-course/`.
+- The public root, `lessons/choose-process/`, `manifest.webmanifest` and `service-worker.js` each returned HTTP `200` with no redirect. The root and lesson contained the expected course markup; the manifest declares standalone display and the service worker still has no network interception.
+- In a fresh public-browser visit, the dashboard rendered the seven-lesson route and labelled cloud email action, then the first-lesson link opened its full lesson. Both pages had an empty console error list.
+- In a `430×932` mobile viewport, matching iPhone 15 Pro Max CSS dimensions, the public dashboard and first lesson had no horizontal overflow; the lesson check button measured `44px` high. This browser emulation is not physical iPhone acceptance.
+
 ## Supabase evidence
 
 - A free Supabase project was created for this course; no GitHub integration, custom domain, paid add-on or server-side secret was configured.
@@ -64,6 +71,5 @@ The documentation tests cover important forbidden/required clauses, but they are
 
 ## Required next evidence
 
-1. Push this reviewed release branch, merge the authorised pull request into `main`, then verify the actual public HTTPS root, a generated lesson, manifest and service-worker response.
-2. On the public course, the owner completes one passwordless email login and checks that a completed lesson remains after reload. Do not record or disclose the email link or identity in this repository.
-3. The owner tests the real iPhone Safari Home Screen path: install, launch, dashboard → lesson → return, completion, close/reopen, export/import and safe-area layout. Only the owner’s explicit confirmation can change the iPhone status to accepted.
+1. On the public course, the owner completes one passwordless email login and checks that a completed lesson remains after reload. Do not record or disclose the email link or identity in this repository.
+2. The owner tests the real iPhone Safari Home Screen path: install, launch, dashboard → lesson → return, completion, close/reopen, export/import and safe-area layout. Only the owner’s explicit confirmation can change the iPhone status to accepted.
