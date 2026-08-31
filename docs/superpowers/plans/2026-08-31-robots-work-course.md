@@ -257,7 +257,7 @@ git commit -m "feat: connect dashboard progress to cloud backup"
 - Create: tests/notebook-ui.test.mjs
 
 **Interfaces:**
-- Palette: paper #F7F8F4, ink #12313D, graphite #33454B, rule #C9D7D2, signal #D85B2A, verified #167A72.
+- Palette: paper #FBF8FD, ink #2A1C3D, graphite #5A4A68, rule #DDD4E5, signal #75408F, verified #5F367A.
 - Hero includes an accessible route map of coordinator and three specialists.
 - Icon is an original no-text coordinator robot above three smaller robots.
 

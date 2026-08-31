@@ -7,6 +7,9 @@ test('the shell gives screen-reader users a named main learning area', async () 
   assert.match(html, /<main[^>]+id="app"[^>]+aria-label="Учебный курс"/);
   assert.match(html, /meta name="viewport"/);
   assert.match(html, /type="module" src="assets\/app\.js"/);
+  const vendorScript = html.indexOf('assets/vendor/supabase-js-2.112.4.umd.js');
+  const appModule = html.indexOf('type="module" src="assets/app.js"');
+  assert.ok(vendorScript >= 0 && vendorScript < appModule, 'loads the official UMD client before the app module');
 });
 
 test('stylesheet reserves safe-area space and touch-sized controls', async () => {

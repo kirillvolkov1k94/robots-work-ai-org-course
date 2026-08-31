@@ -8,5 +8,8 @@
     "render": "node tools/render-course.mjs",
     "check:render": "node tools/check-deterministic-render.mjs",
     "check:links": "node tools/check-internal-links.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.112.4"
   }
 }

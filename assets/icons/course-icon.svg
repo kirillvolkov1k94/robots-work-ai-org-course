@@ -1,6 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Учебная система">
-  <rect width="512" height="512" rx="108" fill="#0f766e"/>
-  <path d="M112 139c52-22 108-19 144 15 36-34 92-37 144-15v224c-55-22-108-12-144 23-36-35-89-45-144-23V139Z" fill="#f4fbfa"/>
-  <path d="M256 154v214M145 190c28-9 57-7 82 7m-82 47c28-9 57-7 82 7m140-61c-28-9-57-7-82 7m82 47c-28-9-57-7-82 7" fill="none" stroke="#0f766e" stroke-linecap="round" stroke-width="18"/>
-  <circle cx="256" cy="95" r="26" fill="#f4b24c"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Координатор и три специализированных робота">
+  <rect width="512" height="512" rx="108" fill="#FBF8FD"/>
+  <path d="M256 233v52M136 347l94-50m146 50-94-50" fill="none" stroke="#5A4A68" stroke-linecap="round" stroke-width="18"/>
+  <g fill="#FBF8FD" stroke="#2A1C3D" stroke-width="18">
+    <rect x="151" y="72" width="210" height="164" rx="50"/>
+    <rect x="49" y="331" width="132" height="108" rx="36"/>
+    <rect x="190" y="331" width="132" height="108" rx="36"/>
+    <rect x="331" y="331" width="132" height="108" rx="36"/>
+  </g>
+  <g fill="#2A1C3D">
+    <circle cx="218" cy="148" r="18"/><circle cx="294" cy="148" r="18"/>
+    <circle cx="91" cy="380" r="13"/><circle cx="139" cy="380" r="13"/>
+    <circle cx="232" cy="380" r="13"/><circle cx="280" cy="380" r="13"/>
+    <circle cx="373" cy="380" r="13"/><circle cx="421" cy="380" r="13"/>
+  </g>
+  <path d="M230 193h52M100 412h30m101 0h50m101 0h30" fill="none" stroke="#75408F" stroke-linecap="round" stroke-width="16"/>
+  <path d="M256 72V42" stroke="#5F367A" stroke-linecap="round" stroke-width="18"/>
 </svg>

@@ -3,20 +3,42 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#0f766e">
+    <meta name="theme-color" content="#2A1C3D">
+    <meta name="description" content="Семь коротких уроков о безопасной организации ИИ-агентов для одного процесса студии.">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/icons/course-icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/course-icon-180.png">
     <link rel="stylesheet" href="assets/styles.css">
-    <title>Учебная система</title>
+    <title>Роботы работают</title>
   </head>
   <body>
     <a class="skip-link" href="#app">К содержанию</a>
+    <header class="course-mark">
+      <svg class="course-mark__map" viewBox="0 0 168 132" role="img" aria-label="Карта ролей агентов">
+        <path d="M84 47v19M29 88l45-20m65 20L94 68" fill="none" stroke="#5A4A68" stroke-linecap="round" stroke-width="3"/>
+        <g fill="#FBF8FD" stroke="#2A1C3D" stroke-width="3">
+          <rect x="58" y="9" width="52" height="40" rx="12"/>
+          <rect x="8" y="87" width="42" height="32" rx="10"/>
+          <rect x="63" y="87" width="42" height="32" rx="10"/>
+          <rect x="118" y="87" width="42" height="32" rx="10"/>
+        </g>
+        <g fill="#2A1C3D"><circle cx="74" cy="28" r="4"/><circle cx="94" cy="28" r="4"/><circle cx="21" cy="102" r="3"/><circle cx="37" cy="102" r="3"/><circle cx="76" cy="102" r="3"/><circle cx="92" cy="102" r="3"/><circle cx="131" cy="102" r="3"/><circle cx="147" cy="102" r="3"/></g>
+        <path d="M78 39h12M25 111h9m45 0h10m45 0h10" fill="none" stroke="#75408F" stroke-linecap="round" stroke-width="3"/>
+        <path d="M84 9V3" stroke="#5F367A" stroke-linecap="round" stroke-width="3"/>
+      </svg>
+      <div class="course-mark__copy">
+        <p class="course-mark__label">Роботы работают</p>
+        <p class="course-mark__title">Координатор → три узкие роли</p>
+        <p class="course-mark__description">Карта маршрута: разложить задачу, сделать, проверить, остановиться.</p>
+      </div>
+    </header>
     <main id="app" aria-label="Учебный курс" tabindex="-1">
       <p>Загрузка учебной системы…</p>
     </main>
     <noscript>Для интерактивного прогресса включите JavaScript.</noscript>
+    <script src="assets/vendor/supabase-js-2.112.4.umd.js"></script>
     <script type="module" src="assets/app.js"></script>
   </body>
 </html>
