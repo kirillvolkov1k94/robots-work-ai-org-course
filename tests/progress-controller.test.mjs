@@ -78,7 +78,7 @@ test('reports saved and link-sent states through injected gateway methods', asyn
     localStore: memoryStore(),
     gateway: {
       async saveProgress(courseId, progress) { return progress; },
-      async requestMagicLink(email) { return { email }; },
+      async requestMagicLink() { return { user: null, session: null }; },
     },
     courseId: 'robots-work',
     onStateChange: (state) => states.push(state.status),
@@ -89,6 +89,19 @@ test('reports saved and link-sent states through injected gateway methods', asyn
 
   assert.equal(controller.getState().status, 'link-sent');
   assert.deepEqual(states, ['local', 'saving', 'saved', 'link-sent']);
+});
+
+test('rejects every direct malformed magic-link response instead of reporting link-sent', async () => {
+  for (const malformed of [false, 0, '', [], {}]) {
+    const controller = createProgressController({
+      localStore: memoryStore(),
+      gateway: { async requestMagicLink() { return malformed; } },
+      courseId: 'robots-work',
+    });
+
+    await assert.rejects(controller.requestMagicLink('owner@example.test'), /malformed response/);
+    assert.equal(controller.getState().status, 'retry');
+  }
 });
 
 test('does not claim saved when a gateway returns an undefined save envelope', async () => {
@@ -102,6 +115,52 @@ test('does not claim saved when a gateway returns an undefined save envelope', a
 
   assert.equal(controller.getState().status, 'retry');
   assert.equal(controller.load().completed.choose.score, 100);
+});
+
+test('does not claim saved when a deferred gateway response is a valid but stale record', async () => {
+  let resolveSave;
+  const controller = createProgressController({
+    localStore: memoryStore(),
+    gateway: {
+      saveProgress() {
+        return new Promise((resolve) => { resolveSave = resolve; });
+      },
+    },
+    courseId: 'robots-work',
+  });
+
+  const completion = controller.recordCompletion('choose', 100);
+  await Promise.resolve();
+  resolveSave(createEmptyProgress('robots-work'));
+  await completion;
+
+  assert.equal(controller.getState().status, 'retry');
+  assert.equal(controller.load().completed.choose.score, 100);
+});
+
+test('accepts a structurally equal deferred save echo despite object key order', async () => {
+  let resolveSave;
+  const controller = createProgressController({
+    localStore: memoryStore(),
+    gateway: {
+      saveProgress() {
+        return new Promise((resolve) => { resolveSave = resolve; });
+      },
+    },
+    courseId: 'robots-work',
+  });
+
+  const completion = controller.recordCompletion('choose', 100);
+  await Promise.resolve();
+  resolveSave({
+    completed: { choose: { completedAt: 1, score: 100 } },
+    updatedAt: 1,
+    courseId: 'robots-work',
+    version: 1,
+  });
+  await completion;
+
+  assert.equal(controller.getState().status, 'saved');
 });
 
 test('does not claim link-sent when a gateway returns an undefined magic-link envelope', async () => {

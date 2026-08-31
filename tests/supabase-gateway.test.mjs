@@ -81,6 +81,14 @@ test('sends magic links using only the configured redirect URL', async () => {
   });
 });
 
+test('rejects magic-link envelopes whose user or session value has the wrong type', async () => {
+  const { client } = createClient();
+  client.auth.signInWithOtp = async () => ({ data: { user: 'bad', session: [] }, error: null });
+  const gateway = createSupabaseGateway({ config, clientFactory: () => client });
+
+  await assert.rejects(gateway.requestMagicLink('owner@example.test'), /provider request failed/);
+});
+
 test('scopes progress reads and upserts to the authenticated user and course', async () => {
   const saved = progressRecord();
   const { client, calls, filters } = createClient({ progress: { progress: saved } });

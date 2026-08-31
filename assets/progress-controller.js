@@ -10,7 +10,29 @@ function copyProgress(progress) {
 }
 
 function sameProgress(left, right) {
-  return JSON.stringify(left) === JSON.stringify(right);
+  if (!left || !right || left.version !== right.version || left.courseId !== right.courseId || left.updatedAt !== right.updatedAt) return false;
+  if (!left.completed || !right.completed) return false;
+  const leftLessonIds = Object.keys(left.completed);
+  const rightLessonIds = Object.keys(right.completed);
+  if (leftLessonIds.length !== rightLessonIds.length) return false;
+  return leftLessonIds.every((lessonId) => {
+    if (!Object.hasOwn(right.completed, lessonId)) return false;
+    const leftCompletion = left.completed[lessonId];
+    const rightCompletion = right.completed[lessonId];
+    return leftCompletion?.score === rightCompletion?.score
+      && leftCompletion?.completedAt === rightCompletion?.completedAt;
+  });
+}
+
+function isMagicLinkConfirmation(value) {
+  return Boolean(value)
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && Object.getPrototypeOf(value) === Object.prototype
+    && Object.hasOwn(value, 'user')
+    && Object.hasOwn(value, 'session')
+    && value.user === null
+    && value.session === null;
 }
 
 export function createProgressController({ localStore, gateway, courseId, onStateChange = () => {} }) {
@@ -57,6 +79,7 @@ export function createProgressController({ localStore, gateway, courseId, onStat
         const snapshot = load();
         const saved = await gateway.saveProgress(courseId, snapshot);
         if (!isValidProgress(saved, courseId)) throw new Error('Cloud progress returned malformed response');
+        if (!sameProgress(saved, snapshot)) throw new Error('Cloud progress confirmation did not match queued snapshot');
         if (request === latestSaveRequest) emit('saved');
         return saved;
       } catch (error) {
@@ -124,7 +147,7 @@ export function createProgressController({ localStore, gateway, courseId, onStat
     }
     try {
       const result = await gateway.requestMagicLink(email);
-      if (result === null || result === undefined) throw new Error('Magic link returned malformed response');
+      if (!isMagicLinkConfirmation(result)) throw new Error('Magic link returned malformed response');
       emit('link-sent');
       return result;
     } catch (error) {

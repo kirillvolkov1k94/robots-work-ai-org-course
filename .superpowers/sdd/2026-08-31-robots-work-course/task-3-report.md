@@ -98,3 +98,45 @@ node --test tests/*.test.mjs
 ```
 
 Observed: renderer completed; deterministic render passed; internal-link check passed; full Node suite passed 71/71. Authored source/config/test files pass `git diff --check`; the unchanged official UMD artifact intentionally retains upstream trailing whitespace.
+
+## Fix round 2 — cloud confirmation verification
+
+### Revision range and root causes
+
+- Base: `a2f2b575ab757e29f1cfb9be9063c3ee300a1090`.
+- Head: `HEAD` at the single cohesive `fix: verify cloud progress confirmations` commit.
+- Magic-link handling only checked that `user` and `session` properties existed; controller accepted every non-null value. Save handling only checked progress schema, so a valid but stale/empty response could incorrectly emit `saved`.
+
+### Corrections
+
+- The one magic-link success contract is `{ user: null, session: null }`. Gateway validates it at the provider boundary; controller validates it again for injected fakes. Wrong primitive, array, empty object, or wrong field values throw a generic safe error and leave `retry` state.
+- Save confirmation now requires structural equality with the snapshot captured for that queued request. Key insertion order is irrelevant; version, course, timestamp, lesson IDs, scores and completion timestamps must match. A stale but schema-valid echo retains local progress and reports `retry`.
+
+### TDD evidence
+
+RED command:
+
+```sh
+node --test tests/progress-controller.test.mjs tests/supabase-gateway.test.mjs
+```
+
+Observed: 15 passed, 3 failed. The failures proved controller acceptance of malformed direct magic results, `saved` after a deferred empty valid progress response, and gateway acceptance of malformed `user/session` values.
+
+GREEN command:
+
+```sh
+node --test tests/progress-controller.test.mjs tests/supabase-gateway.test.mjs
+```
+
+Observed: 18 passed, 0 failed.
+
+### Final verification
+
+```sh
+npm run render
+node tools/check-deterministic-render.mjs
+node tools/check-internal-links.mjs
+node --test tests/*.test.mjs
+```
+
+Observed: renderer completed; deterministic render passed; internal-link check passed; full Node suite passed 75/75. Authored files pass `git diff --check`; the unchanged official UMD artifact intentionally retains upstream trailing whitespace.

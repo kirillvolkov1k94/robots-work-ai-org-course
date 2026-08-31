@@ -46,6 +46,14 @@ function isSuccessfulEnvelope(value) {
     && value.error === null;
 }
 
+function isMagicLinkData(value) {
+  return isPlainObject(value)
+    && Object.hasOwn(value, 'user')
+    && Object.hasOwn(value, 'session')
+    && value.user === null
+    && value.session === null;
+}
+
 function hasSafePublicConfig(config) {
   if (!config || typeof config !== 'object' || Array.isArray(config)) return false;
   const keys = Object.keys(config);
@@ -118,8 +126,7 @@ export function createSupabaseGateway({ config, clientFactory }) {
     } catch {
       throw providerFailure();
     }
-    if (!isSuccessfulEnvelope(result) || !isPlainObject(result.data)) throw providerFailure();
-    if (!Object.hasOwn(result.data, 'user') || !Object.hasOwn(result.data, 'session')) throw providerFailure();
+    if (!isSuccessfulEnvelope(result) || !isMagicLinkData(result.data)) throw providerFailure();
     return result.data;
   }
 
