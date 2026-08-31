@@ -67,6 +67,14 @@ export function validateCourse(course) {
       if (!isNonEmptyString(lesson.outcome)) errors.push(`lesson ${lesson.id || '(unknown)'} is missing outcome`);
       if (!isNonEmptyString(lesson.retrieval)) errors.push(`lesson ${lesson.id || '(unknown)'} is missing retrieval prompt`);
       if (!isNonEmptyString(lesson.nextStep)) errors.push(`lesson ${lesson.id || '(unknown)'} is missing next step`);
+      if (!lesson.lifeExample || typeof lesson.lifeExample !== 'object' || !isNonEmptyString(lesson.lifeExample.body)) {
+        errors.push(`lesson ${lesson.id || '(unknown)'} needs a life example`);
+      }
+      if (!Array.isArray(lesson.artifactChecklist) || lesson.artifactChecklist.length < 2) {
+        errors.push(`lesson ${lesson.id || '(unknown)'} needs at least two artefact checks`);
+      } else if (lesson.artifactChecklist.some((item) => !isNonEmptyString(item))) {
+        errors.push(`lesson ${lesson.id || '(unknown)'} artefact checks must be non-empty strings`);
+      }
       if (!Array.isArray(lesson.sections) || lesson.sections.length === 0) {
         errors.push(`lesson ${lesson.id || '(unknown)'} sections must be non-empty`);
       } else {
@@ -155,6 +163,10 @@ export function validateCourse(course) {
       if (!isNonEmptyString(source.id)) errors.push('source id is missing');
       else if (!isSafeSlug(source.id)) errors.push(`source ${source.title || '(unknown)'} id must be URL-safe`);
       if (!isNonEmptyString(source.title)) errors.push('source title is missing');
+      if (!isNonEmptyString(source.author)) errors.push(`source ${source.title || '(unknown)'} author is missing`);
+      if (!isNonEmptyString(source.publishedAt)) errors.push(`source ${source.title || '(unknown)'} published date is missing`);
+      if (!isNonEmptyString(source.sourceType)) errors.push(`source ${source.title || '(unknown)'} type is missing`);
+      if (!isNonEmptyString(source.rule)) errors.push(`source ${source.title || '(unknown)'} narrow rule is missing`);
       const url = parseSafeSourceUrl(source.url);
       if (!url) errors.push(`source ${source.title || '(unknown)'} URL must use http or https`);
       else if (hasSensitiveSourceUrlData(url)) errors.push(`source ${source.title || '(unknown)'} URL must not contain credentials or sensitive query parameters`);

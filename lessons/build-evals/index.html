@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#2A1C3D">
+    <meta name="description" content="Семь коротких уроков о безопасной организации ИИ-агентов для одного процесса студии.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="manifest" href="../../manifest.webmanifest">
+    <link rel="icon" href="../../assets/icons/course-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../../assets/icons/course-icon-180.png">
+    <title>Качество до запуска</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">К содержанию</a>
+    <header class="site-header"><a href="../../index.html">Роботы работают</a></header>
+    <main id="content" aria-label="Материал курса"><article class="lesson">
+  <p class="eyebrow">Урок</p>
+  <h1>Качество до запуска</h1>
+  <section><h2>Как это выглядит в жизни</h2><p>Новый трафарет проверяют на бумаге: обычный контур, сложный изгиб и то, чего делать нельзя. Это не доказывает идеальность татуировки, но замечает риск до клиента. Так же заранее готовят короткие тестовые карточки для процесса.</p></section>
+  <p class="outcome"><strong>Результат:</strong> Ты подготовишь 12 fixtures: четыре normal, четыре edge и четыре prohibited с критериями.</p>
+  <section class="retrieval"><h2>Вспомни сначала</h2><p>Вспомни: что возвращает система при нехватке данных и внешнем действии?</p></section>
+  <section><h2>Разбираем по-простому</h2><p>Fixture — безопасный заранее описанный вход с ожидаемым наблюдаемым результатом. Цикл: fixtures → критерии → несколько запусков → разбор. Повторяемость — достижение порога качества в серии похожих запусков, а не одинаковый текст символ в символ.</p></section>
+<section><h2>Не верим красивому тексту</h2><p>Проверяй исход, след выполнения и стоп-правило, а не уверенный тон. Детерминированная проверка маршрута и реальный интеграционный прогон отвечают на разные вопросы. До эмуляции не дают высокорисковый инструмент.</p></section>
+  <section><h2>Практика</h2><ol><li>Сделай за 30 минут: выпиши 12 fixtures: 4 normal, 4 edge, 4 prohibited; добавь ожидаемый статус и критерий.</li><li>Используй только синтетические или разрешённые публичные входы; не вставляй клиентские тексты, номера, ключи или договоры.</li></ol></section>
+  <section><h2>Проверка артефакта</h2><ul><li>Есть 12 случаев и все три группы.</li><li>У каждого есть статус: INTERNAL_BRIEF, MISSING_DATA или APPROVAL_REQUEST.</li><li>Prohibited проверяют отказ от внешнего действия, не обход запрета.</li></ul></section>
+  <section><h2>Проверь себя</h2><form class="quiz-form" data-quiz-lesson="build-evals"><fieldset><legend>Что лучше проверять в evaluation?</legend><label class="quiz-answer"><input type="checkbox" name="answer" value="outcome-and-trace"> Исход, след выполнения и соблюдение правила.</label><label class="quiz-answer"><input type="checkbox" name="answer" value="confident-tone"> Длину и уверенный тон черновика.</label></fieldset><button class="button button-primary" type="submit">Проверить ответ</button><p data-quiz-status aria-live="polite"></p></form></section>
+  <section><h2>Источники</h2><ul><li><a href="https://developers.openai.com/api/docs/guides/evals">Working with evals</a></li><li><a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Demystifying Evals for AI Agents</a></li><li><a href="https://openai.github.io/openai-agents-python/testing/">Testing</a></li><li><a href="https://arxiv.org/abs/2308.03688">AgentBench: Evaluating LLMs as Agents</a></li><li><a href="https://arxiv.org/abs/2309.15817">Identifying the Risks of LM Agents with an LM-Emulated Sandbox</a></li></ul></section>
+  <section><h2>Следующее действие</h2><p>Завтра зафиксируй три прогона в Run Ledger и сравни их с базовой точкой.</p></section>
+  <aside class="lesson-help" aria-label="Помощь по уроку"><p>Если что-то осталось непонятным, спроси агента и назови урок или конкретный фрагмент.</p></aside>
+</article></main>
+    <script src="../../assets/vendor/supabase-js-2.112.4.umd.js"></script>
+    <script type="module" src="../../assets/lesson-page.js"></script>
+  </body>
+</html>

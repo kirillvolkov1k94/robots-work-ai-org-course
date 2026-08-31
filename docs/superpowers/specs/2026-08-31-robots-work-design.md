@@ -60,12 +60,12 @@ The course is platform-neutral. It may mention Codex and Hermes as familiar exam
 
 **Tokens.** The interface avoids the generic purple-AI template recommended by a generic design lookup. Instead it uses a deliberate drafting-table palette:
 
-- paper: `#F7F8F4`;
-- ink: `#12313D`;
-- graphite: `#33454B`;
-- rule line: `#C9D7D2`;
-- signal orange for human gates only: `#D85B2A`;
-- verified teal: `#167A72`.
+- paper: `#FBF8FD`;
+- ink: `#2A1C3D`;
+- graphite: `#5A4A68`;
+- rule line: `#DDD4E5`;
+- signal violet for human gates only: `#75408F`;
+- verified plum: `#5F367A`.
 
 Body copy uses the system UI stack for fast iPhone rendering; role IDs, route labels, and evidence fields use a system monospace stack. The two typographic roles make the route map feel like a real work note without downloading a font or introducing an extra third-party request.
 
@@ -118,4 +118,3 @@ RLS permits an authenticated user to select, insert, update, and delete only row
 3. Required commands: renderer, deterministic renderer, internal-link check, and all Node tests.
 4. A local visual review checks narrow mobile layout, focus, source links, authentication empty/error states, and the service-worker rule.
 5. GitHub Pages publication and the exact live URL are only claimed after successful deployment. Physical iPhone Home Screen installation remains a user acceptance step and is not inferred from desktop or emulator checks.
-

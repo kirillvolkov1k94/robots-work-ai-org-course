@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { bootCourseApp, importSuccessMessage } from '../assets/app.js';
+import { createProgressRuntime } from '../assets/progress-runtime.js';
+import { createEmptyProgress } from '../assets/progress-record.js';
 import { sampleCourse } from '../content/course-data.js';
 
 class FakeElement {
@@ -71,10 +73,25 @@ function findInput(element) {
   return null;
 }
 
+function findAll(element, predicate, found = []) {
+  if (predicate(element)) found.push(element);
+  for (const child of element.children) findAll(child, predicate, found);
+  return found;
+}
+
+function textOf(element) {
+  return `${element.textContent} ${element.children.map(textOf).join(' ')}`.trim();
+}
+
+function emptyProgressStore() {
+  return { load: () => ({ completed: {} }), importJson: () => ({ ok: true }) };
+}
+
 test('announces successful progress import after the dashboard rerenders', async () => {
   const { document, root } = fakeDocument();
   const progressStore = {
     load: () => ({ completed: {} }),
+    recordCompletion: () => ({ completed: {} }),
     importJson: () => ({ ok: true }),
   };
   const window = { localStorage: {}, document, URL: {} };
@@ -88,4 +105,117 @@ test('announces successful progress import after the dashboard rerenders', async
   assert.equal(document.documentElement.lang, 'ru');
   assert.equal(status.attributes.get('aria-live'), 'polite');
   assert.equal(status.textContent, importSuccessMessage());
+});
+
+test('reports a cloud-failed import as restored local backup without stale saved state', async () => {
+  const { document, root } = fakeDocument();
+  let progress = createEmptyProgress('robots-work');
+  const store = {
+    load: () => structuredClone(progress),
+    recordCompletion() { return structuredClone(progress); },
+    importJson(text) { progress = JSON.parse(text); return { ok: true }; },
+  };
+  const runtime = createProgressRuntime({
+    courseId: 'robots-work',
+    progressStore: store,
+    cloudConfig: { url: 'https://example.supabase.co', publishableKey: 'sb_publishable_example', redirectTo: 'https://course.example.test/' },
+    gatewayFactory: () => ({
+      isConfigured: true,
+      async getCurrentUser() { return { id: 'user-1' }; },
+      async loadProgress() { return null; },
+      async saveProgress() { throw new Error('offline'); },
+      async signOut() {},
+    }),
+  });
+  await runtime.ready;
+  const app = bootCourseApp({ document, window: { localStorage: {}, document, URL: {} }, course: sampleCourse, progressStore: store, progressRuntime: runtime });
+  await app.ready;
+
+  const input = findInput(root);
+  input.files = [{ text: async () => JSON.stringify({ ...createEmptyProgress('robots-work'), updatedAt: 5, completed: { choose: { score: 100, completedAt: 5 } } }) }];
+  await input.listeners.get('change')({});
+
+  assert.equal(runtime.getSnapshot().state.progress.completed.choose.score, 100);
+  assert.equal(runtime.getSnapshot().state.status, 'retry');
+  assert.equal(root.querySelector('.status-message').textContent, importSuccessMessage());
+  assert.doesNotMatch(root.querySelector('.status-message').textContent, /в облаке/i);
+});
+
+test('shows a labelled magic-link action to a signed-out reader and reports its result safely', async () => {
+  const { document, root } = fakeDocument();
+  let requestedEmail = '';
+  const runtime = {
+    ready: Promise.resolve(),
+    getSnapshot: () => ({ configured: true, account: null, state: { status: 'local' } }),
+    async requestMagicLink(email) { requestedEmail = email; },
+  };
+  const window = { localStorage: {}, document, URL: {} };
+  const app = bootCourseApp({ document, window, course: sampleCourse, progressStore: emptyProgressStore(), progressRuntime: runtime });
+  await app.ready;
+
+  const input = findAll(root, (element) => element.tagName === 'input' && element.attributes.get('id') === 'progress-email')[0];
+  const label = findAll(root, (element) => element.tagName === 'label' && element.attributes.get('for') === 'progress-email')[0];
+  const form = findAll(root, (element) => element.tagName === 'form')[0];
+  assert.equal(label.textContent, 'Email для сохранения прогресса');
+  assert.equal(input.attributes.get('type'), 'email');
+  assert.equal(input.attributes.get('autocomplete'), 'email');
+  assert.equal(input.attributes.get('required'), '');
+  assert.match(textOf(root), /Отправить ссылку для входа/);
+
+  input.value = 'owner@example.test';
+  await form.listeners.get('submit')({ preventDefault() {} });
+  assert.equal(requestedEmail, 'owner@example.test');
+  assert.match(root.querySelector('.status-message').textContent, /Проверьте почту/i);
+});
+
+test('keeps a failed magic-link request retryable without exposing provider details', async () => {
+  const { document, root } = fakeDocument();
+  const runtime = {
+    ready: Promise.resolve(),
+    getSnapshot: () => ({ configured: true, account: null, state: { status: 'local' } }),
+    async requestMagicLink() { throw new Error('token=do-not-expose'); },
+  };
+  const app = bootCourseApp({ document, window: { localStorage: {}, document, URL: {} }, course: sampleCourse, progressStore: emptyProgressStore(), progressRuntime: runtime });
+  await app.ready;
+
+  const form = findAll(root, (element) => element.tagName === 'form')[0];
+  await form.listeners.get('submit')({ preventDefault() {} });
+  const message = root.querySelector('.status-message').textContent;
+  assert.match(message, /попробуйте ещё раз/i);
+  assert.doesNotMatch(message, /token=/i);
+});
+
+test('shows signed-in save actions, retry and local-only sign-out', async () => {
+  const { document, root } = fakeDocument();
+  let signedOut = 0;
+  const runtime = {
+    ready: Promise.resolve(),
+    getSnapshot: () => ({ configured: true, account: { id: 'user-1', email: 'owner@example.test' }, state: { status: 'retry' } }),
+    async retry() { throw new Error('offline'); },
+    async signOut() { signedOut += 1; },
+  };
+  const app = bootCourseApp({ document, window: { localStorage: {}, document, URL: {} }, course: sampleCourse, progressStore: emptyProgressStore(), progressRuntime: runtime });
+  await app.ready;
+
+  assert.match(textOf(root), /owner@example\.test/);
+  assert.match(textOf(root), /Сохранить сейчас/);
+  assert.match(textOf(root), /Повторить сохранение/);
+  const signOut = findAll(root, (element) => element.tagName === 'button' && element.textContent === 'Выйти на этом устройстве')[0];
+  await signOut.listeners.get('click')({});
+  assert.equal(signedOut, 1);
+});
+
+test('keeps the dashboard local-only when cloud setup is absent', async () => {
+  const { document, root } = fakeDocument();
+  const runtime = {
+    ready: Promise.resolve(),
+    getSnapshot: () => ({ configured: false, account: null, state: { status: 'local' } }),
+  };
+  const window = { localStorage: {}, document, URL: {} };
+  const app = bootCourseApp({ document, window, course: sampleCourse, progressStore: emptyProgressStore(), progressRuntime: runtime });
+  await app.ready;
+
+  assert.equal(findAll(root, (element) => element.attributes.get('id') === 'progress-email').length, 0);
+  assert.match(textOf(root), /Облачное сохранение не настроено/i);
+  assert.match(textOf(root), /Экспортировать прогресс/);
 });
