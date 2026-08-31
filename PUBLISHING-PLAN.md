@@ -7,6 +7,8 @@
 3. Просмотреть узкий мобильный layout, keyboard focus, source links, empty/error states и отсутствие service-worker fetch handler.
 4. Проверить публичные URLs источников и отсутствие секретов, free-form learner text и service-role credentials.
 
+Локальное доказательство этого этапа за 2026-09-01 находится в [VALIDATION-REPORT.md](VALIDATION-REPORT.md). Оно подтверждает только локальный релиз-кандидат: до следующего этапа нет live GitHub Pages URL, настроенного Supabase или принятия на iPhone.
+
 ## Publication gate
 
 Публикация GitHub Pages, push, deploy и заявление о live URL требуют отдельного действия и свежего подтверждения владельца. Этот документ не выполняет публикацию и не доказывает её.
