@@ -1,5 +1,52 @@
 # Task 2 report — seven-day curriculum and course documents
 
+## Fix round 1
+
+Base: `2393bba` (`feat: add robots work course curriculum`).
+Head: `HEAD` after the single Task 2 fix commit; its SHA is reported in the delivery handoff.
+
+### Corrected contracts
+
+- The rendered lesson now starts with the ordinary-life anchor, before outcome and retrieval prompts. The anchors do not introduce framework labels before their plain explanation.
+- Days 5 and 7 now include a local/tabletop, no-service dry run: use the learner's own role cards and route map with one synthetic/public fixture, time the actual route, record the real result and stop state, and repeat at most three times. Missing evidence stays missing; it is never invented.
+- `MISSION.md`, `SCOPE-LOCK.md` and `README-RU.md` now state the planned—not yet connected—Supabase passwordless email and RLS model: lessons remain public; cloud contains only email identity and validated learning-progress JSON; the owner may read/delete only their progress; sign-out does not delete it; no free-form business/client data or secrets are saved.
+- Source map now describes the 15 checked course sources, not replacement examples. Reviewed source titles match their current target pages: `Agent orchestration`, `Working with evals`, and `Identifying the Risks of LM Agents with an LM-Emulated Sandbox`.
+- Glossary now defines `REVIEW_REQUIRED`, `MISSING_DATA`, `INTERNAL_BRIEF`, baseline, KPI and QA.
+
+### Fix-round TDD evidence
+
+RED command:
+
+```sh
+node --test tests/course-learning-shape.test.mjs tests/course-docs.test.mjs
+```
+
+Result: 5 passed, 6 failed. Failures proved the reversed rendered order, absent tabletop protocol, inaccurate source-map copy, missing cloud-model documents, old source titles and framework labels in anchors.
+
+GREEN command:
+
+```sh
+node tools/render-course.mjs && node --test tests/course-learning-shape.test.mjs tests/course-docs.test.mjs tests/course-contract.test.mjs tests/render-course.test.mjs
+```
+
+Result: 30 passed, 0 failed.
+
+### Remaining limits
+
+- Supabase/passwordless/RLS is specified only; Task 3/7 owns implementation and provider acceptance.
+- Local tabletop evidence is learner-owned outside the app. It does not prove an external integration, production readiness, business result, deploy, or physical iPhone acceptance.
+
+### Fix-round final verification
+
+```sh
+node tools/render-course.mjs
+node tools/check-deterministic-render.mjs
+node tools/check-internal-links.mjs
+node --test tests/*.test.mjs
+```
+
+Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 50/50. Direct course audit: 7 lessons, 15 sources. `git diff --check` was clean after this report formatting correction.
+
 ## Scope completed
 
 - Replaced the template course with the approved seven lessons in `content/course-data.js`:

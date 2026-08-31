@@ -53,9 +53,9 @@ function renderLesson(lesson, sourcesById) {
   return `<article class="lesson">
   <p class="eyebrow">Урок</p>
   <h1>${escapeHtml(lesson.title)}</h1>
+  <section><h2>Как это выглядит в жизни</h2><p>${escapeHtml(lesson.lifeExample.body)}</p></section>
   <p class="outcome"><strong>Результат:</strong> ${escapeHtml(lesson.outcome)}</p>
   <section class="retrieval"><h2>Вспомни сначала</h2><p>${escapeHtml(lesson.retrieval)}</p></section>
-  <section><h2>Как это выглядит в жизни</h2><p>${escapeHtml(lesson.lifeExample.body)}</p></section>
   ${sections}
   <section><h2>Практика</h2><ol>${practice}</ol></section>
   <section><h2>Проверка артефакта</h2><ul>${artifactChecks}</ul></section>
@@ -78,7 +78,7 @@ function renderSourceMap(sources) {
   const items = sources.length === 0
     ? '<li>В этом учебном примере источники ещё не добавлены.</li>'
     : sources.map((source) => `<li id="source-${escapeHtml(source.id)}" class="source-card"><a href="${escapeHtml(source.url)}">${escapeHtml(source.title)}</a><br><small>Тип: ${escapeHtml(source.sourceType)}</small><br><small>Опубликовано: ${escapeHtml(source.publishedAt)}</small><br><small>Правило: ${escapeHtml(source.rule)}</small><br><small>Проверено: ${escapeHtml(source.accessedAt)}</small><br><small>Использовано для: ${escapeHtml(source.usedFor)}</small></li>`).join('');
-  return `<article class="reference"><p class="eyebrow">Справочник</p><h1>Карта источников</h1><p>Замените примеры первичными источниками по теме курса и фиксируйте дату проверки.</p><ul>${items}</ul></article>`;
+  return `<article class="reference"><p class="eyebrow">Справочник</p><h1>Карта источников</h1><p>Здесь ${sources.length} проверенных источников курса: для каждого указаны тип, дата, правило применения и область уроков. Источники проверены на дату, указанную в карточке.</p><ul>${items}</ul></article>`;
 }
 
 async function writePage(root, segments, html) {

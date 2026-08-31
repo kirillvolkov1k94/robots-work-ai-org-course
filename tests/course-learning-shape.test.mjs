@@ -26,6 +26,38 @@ test('requires plain-life examples and proof checklists for every lesson', () =>
   }
 });
 
+test('keeps unfamiliar framework labels out of the first ordinary-life anchor', () => {
+  const frameworkLabels = /Process Passport|KPI|Coordinator|Specialist|Approval\/Archive|fixture|Run Ledger|shadow pilot/i;
+  for (const lesson of sampleCourse.lessons) {
+    assert.doesNotMatch(lesson.lifeExample.body, frameworkLabels, lesson.id);
+  }
+});
+
+test('shows the ordinary-life anchor before outcomes and retrieval prompts', async () => {
+  await withTempDir(async (root) => {
+    await renderCourse(sampleCourse, root);
+    for (const lesson of sampleCourse.lessons) {
+      const html = await readFile(join(root, 'lessons', lesson.slug, 'index.html'), 'utf8');
+      const lifeAnchor = html.indexOf('<h2>Как это выглядит в жизни</h2>');
+      assert.ok(lifeAnchor > html.indexOf(`<h1>${lesson.title}</h1>`));
+      assert.ok(lifeAnchor < html.indexOf('<p class="outcome">'));
+      assert.ok(lifeAnchor < html.indexOf('<section class="retrieval">'));
+    }
+  });
+});
+
+test('gives days five and seven a local tabletop run protocol with observable evidence', () => {
+  for (const id of ['keep-run-ledger', 'run-shadow-pilot']) {
+    const lesson = sampleCourse.lessons.find((item) => item.id === id);
+    const content = [...lesson.sections.map((section) => section.body), ...lesson.practice, ...lesson.artifactChecklist].join(' ');
+    assert.match(content, /стол|локальн|на бумаге/i);
+    assert.match(content, /синтетическ|публичн/i);
+    assert.match(content, /время|минут/i);
+    assert.match(content, /статус|стоп|результат/i);
+    assert.doesNotMatch(content, /отправь|запусти в production/i);
+  }
+});
+
 test('rejects a lesson without a plain-life example', () => {
   const invalidCourse = structuredClone(sampleCourse);
   delete invalidCourse.lessons[0].lifeExample;
