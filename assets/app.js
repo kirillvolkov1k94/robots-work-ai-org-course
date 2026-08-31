@@ -1,5 +1,6 @@
 import { sampleCourse } from '../content/course-data.js';
 import { createProgressStore } from './progress-store.js';
+import { createProgressRuntime } from './progress-runtime.js';
 
 export function getNextLesson(lessons, completed) {
   return lessons.find((lesson) => !completed[lesson.id]) ?? lessons.at(-1);
@@ -62,7 +63,75 @@ function exportProgress(window, store, setStatus) {
   setStatus('Резервная копия прогресса подготовлена для сохранения на устройстве.');
 }
 
-function buildDashboard(document, window, course, store, render) {
+export function cloudStatusMessage(state) {
+  if (state?.status === 'local') return 'Локальный прогресс сохранён на устройстве.';
+  if (state?.status === 'saving') return 'Прогресс сохранён на устройстве; выполняется резервное сохранение в облако.';
+  if (state?.status === 'saved') return 'Прогресс сохранён на устройстве и в облаке.';
+  if (state?.status === 'retry') return 'Прогресс сохранён на устройстве; облако сейчас недоступно. Повторите сохранение позже.';
+  if (state?.status === 'link-sent') return 'Проверьте почту: ссылка для входа отправлена.';
+  return '';
+}
+
+function buildCloudState(document, runtime, snapshot, setStatus, render) {
+  const section = createElement(document, 'section', { className: 'backup-card', attributes: { 'aria-labelledby': 'cloud-progress-title' } });
+  section.append(createElement(document, 'h2', { text: 'Облачная резервная копия', attributes: { id: 'cloud-progress-title' } }));
+  if (!snapshot.configured) {
+    section.append(createElement(document, 'p', { text: 'Облачное сохранение не настроено. Прогресс остаётся на этом устройстве; экспортируйте резервную копию при необходимости.' }));
+    return section;
+  }
+
+  if (!snapshot.account) {
+    section.append(createElement(document, 'p', { text: 'Войди по email, чтобы сохранить локальный прогресс в облаке.' }));
+    const form = createElement(document, 'form');
+    const label = createElement(document, 'label', { text: 'Email для сохранения прогресса', attributes: { for: 'progress-email' } });
+    const input = createElement(document, 'input', { attributes: { id: 'progress-email', type: 'email', autocomplete: 'email', required: '' } });
+    const submit = createElement(document, 'button', { className: 'button button-secondary', text: 'Отправить ссылку для входа', attributes: { type: 'submit' } });
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        await runtime.requestMagicLink(input.value);
+        render('Проверьте почту: ссылка для входа отправлена.');
+      } catch {
+        render('Не удалось отправить ссылку. Прогресс сохранён на устройстве; попробуйте ещё раз.');
+      }
+    });
+    form.append(label, input, submit);
+    section.append(form);
+    return section;
+  }
+
+  const accountName = snapshot.account.email ?? snapshot.account.id;
+  section.append(createElement(document, 'p', { text: `Вход выполнен: ${accountName}.` }));
+  section.append(createButton(document, 'Сохранить сейчас', async () => {
+    try {
+      await runtime.retry();
+      render('Прогресс сохранён на устройстве и в облаке.');
+    } catch {
+      render('Прогресс сохранён на устройстве; облако сейчас недоступно. Повторите сохранение позже.');
+    }
+  }));
+  if (snapshot.state?.status === 'retry') {
+    section.append(createButton(document, 'Повторить сохранение', async () => {
+      try {
+        await runtime.retry();
+        render('Прогресс сохранён на устройстве и в облаке.');
+      } catch {
+        render('Прогресс сохранён на устройстве; облако сейчас недоступно. Повторите сохранение позже.');
+      }
+    }));
+  }
+  section.append(createButton(document, 'Выйти на этом устройстве', async () => {
+    try {
+      await runtime.signOut();
+      render('Вы вышли на этом устройстве. Локальный прогресс сохранён.');
+    } catch {
+      setStatus('Не удалось выйти сейчас. Локальный прогресс сохранён на устройстве.');
+    }
+  }));
+  return section;
+}
+
+function buildDashboard(document, window, course, store, runtime, render) {
   const state = store.load();
   const next = getNextLesson(course.lessons, state.completed);
   const percentage = progressPercent(course.lessons, state.completed);
@@ -117,24 +186,32 @@ function buildDashboard(document, window, course, store, render) {
     render(importSuccessMessage());
   });
   importLabel.append(input);
-  backup.append(importLabel, status);
+  const snapshot = runtime.getSnapshot();
+  backup.append(importLabel, buildCloudState(document, runtime, snapshot, setStatus, render), status);
+  status.textContent = cloudStatusMessage(snapshot.state);
 
   fragment.append(hero, progress, nextCard, listSection, backup);
   return fragment;
 }
 
-export function bootCourseApp({ document, window, course = sampleCourse, progressStore } = {}) {
+export function bootCourseApp({ document, window, course = sampleCourse, progressStore, progressRuntime } = {}) {
   const root = document.querySelector('#app');
   if (!root) throw new Error('course root is missing');
   if (document.documentElement && course.meta.language) document.documentElement.lang = course.meta.language;
   const store = progressStore ?? createProgressStore(window.localStorage, course.meta.id);
+  const runtime = progressRuntime ?? createProgressRuntime({ window, courseId: course.meta.id, progressStore: store });
   const render = (statusMessage = '') => {
-    root.replaceChildren(buildDashboard(document, window, course, store, render));
+    root.replaceChildren(buildDashboard(document, window, course, store, runtime, render));
     const status = root.querySelector('.status-message');
     if (statusMessage && status) status.textContent = statusMessage;
   };
   render();
-  return { render, store };
+  const unsubscribe = runtime.subscribe?.(() => render());
+  const ready = Promise.resolve(runtime.ready).then(() => {
+    render();
+    return runtime.getSnapshot();
+  });
+  return { render, store, runtime, ready, unsubscribe };
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {

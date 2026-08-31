@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { getNextLesson, importSuccessMessage, progressPercent } from '../assets/app.js';
+import { cloudStatusMessage, getNextLesson, importSuccessMessage, progressPercent } from '../assets/app.js';
 
 const lessons = [
   { id: 'one' },
@@ -20,4 +20,12 @@ test('reports a rounded percentage for completed lessons', () => {
 
 test('confirms a successful import without implying remote synchronization', () => {
   assert.equal(importSuccessMessage(), 'Импорт выполнен: локальный прогресс восстановлен.');
+});
+
+test('describes cloud failures as a local-safe retry state', () => {
+  assert.match(cloudStatusMessage({ status: 'retry' }), /сохранён на устройстве; облако/i);
+});
+
+test('shows a clear local status before cloud backup is available', () => {
+  assert.match(cloudStatusMessage({ status: 'local' }), /Локальный прогресс/i);
 });

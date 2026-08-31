@@ -68,8 +68,10 @@ export function createProgressController({ localStore, gateway, courseId, onStat
 
   function queueCurrentSave({ throwOnError }) {
     if (!gateway || typeof gateway.saveProgress !== 'function') {
-      emit('retry', 'Cloud progress is unavailable');
-      if (throwOnError) throw new Error('Cloud progress is unavailable');
+      if (throwOnError) {
+        emit('retry', 'Cloud progress is unavailable');
+        throw new Error('Cloud progress is unavailable');
+      }
       return Promise.resolve(null);
     }
     const request = ++latestSaveRequest;
