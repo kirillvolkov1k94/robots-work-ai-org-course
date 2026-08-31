@@ -160,6 +160,40 @@ node --test tests/*.test.mjs
 
 Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 50/50; `git diff --check` was clean.
 
+## Fix round 5
+
+Base: `eb0aa05` (`test: close course policy false passes`).
+Head: `HEAD` after the single final Task 2 test-hardening commit; its SHA is reported in the delivery handoff.
+
+### Corrected contracts
+
+- Supabase live detection is now clause-aware: it rejects an affirmative connected/production/live claim after `Supabase`, but permits `Supabase ещё не подключён`.
+- Sign-out deletion detection now examines each delete/erase verb inside a sign-out clause. It permits explicit negative policy forms (`не`, `не должен`, `не может`, `нельзя`, `запрещено`) and rejects an unnegated second verb even when a correct non-deletion phrase occurs earlier in the same clause.
+- The structural `<h1>`/life-anchor contract and its proof mutations remain unchanged and passing.
+
+### Proof and focused result
+
+```sh
+node --test tests/course-learning-shape.test.mjs tests/course-docs.test.mjs
+```
+
+Result: 11 passed, 0 failed. Explicit allowed proofs passed for `Supabase ещё не подключён` and `Выход не должен стирать облачный прогресс`; explicit rejection proofs threw for the connected-production claim, contradictory `не удаляет … но стирает` clause and direct sign-out deletion.
+
+### Remaining limits
+
+- No unavoidable concern found within this final test-only scope. Cloud implementation, deployment and provider acceptance remain deliberately outside Task 2.
+
+### Fix-round final verification
+
+```sh
+node tools/render-course.mjs
+node tools/check-deterministic-render.mjs
+node tools/check-internal-links.mjs
+node --test tests/*.test.mjs
+```
+
+Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 50/50; `git diff --check` was clean.
+
 ## Scope completed
 
 - Replaced the template course with the approved seven lessons in `content/course-data.js`:

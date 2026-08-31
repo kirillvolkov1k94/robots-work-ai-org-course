@@ -13,12 +13,29 @@ async function readRootFile(name) {
   return readFile(join(root.pathname, name), 'utf8');
 }
 
+function assertNoAffirmativeSupabaseLiveClaim(content) {
+  assert.doesNotMatch(content, /supabase[^.\n]*(?<!не )(?:подключ[её]н|работает в production|работает в продакшен|live)/i);
+}
+
+function assertNoAffirmativeSignOutDeletion(content) {
+  const signOutClauses = content.match(/(?:выход|sign out)[^.!?\n]*/gi) ?? [];
+  for (const clause of signOutClauses) {
+    for (const deletionVerb of clause.matchAll(/(?:удаля\w*|стира\w*)/gi)) {
+      const beforeVerb = clause.slice(Math.max(0, deletionVerb.index - 32), deletionVerb.index);
+      assert.match(
+        beforeVerb,
+        /(?:не|нельзя|запрещено)(?:\s+(?:должен|может))?\s*$/i,
+        `affirmative sign-out deletion in clause: ${clause}`,
+      );
+    }
+  }
+}
+
 function assertPlannedCloudPolicy(content) {
   assert.match(content, /запланирован[^.\n]*ещё не подключ/i);
-  assert.doesNotMatch(content, /(?:уже|успешно|полностью)\s+(?:подключ|реализ|запущ|live)/i);
-  assert.doesNotMatch(content, /supabase[^.\n]*(?:подключ[её]н|работает в production|работает в продакшен|live)/i);
+  assertNoAffirmativeSupabaseLiveClaim(content);
   assert.match(content, /выход не удаляет её/i);
-  assert.doesNotMatch(content, /(?:выход|sign out)[^.\n]*(?<!не )(?:удаля|стира)[^.\n]*(?:облачн|progress|запис)/i);
+  assertNoAffirmativeSignOutDeletion(content);
 }
 
 test('documents the only permitted cloud deletion without weakening other data gates', async () => {
@@ -34,11 +51,13 @@ test('documents the only permitted cloud deletion without weakening other data g
     assert.doesNotMatch(content, /не хранит[^.\n]*персональн/i);
     assertPlannedCloudPolicy(content);
 
-    const falselyLive = `${content} Supabase подключён и работает в production.`;
-    assert.throws(() => assertPlannedCloudPolicy(falselyLive));
-    const falselyDeletingOnSignOut = content.replace('Выход не удаляет её.', 'Выход не удаляет её, но стирает облачный прогресс.');
-    assert.throws(() => assertPlannedCloudPolicy(falselyDeletingOnSignOut));
   }
+
+  assert.doesNotThrow(() => assertNoAffirmativeSupabaseLiveClaim('Supabase ещё не подключён.'));
+  assert.throws(() => assertNoAffirmativeSupabaseLiveClaim('Supabase подключён и работает в production.'));
+  assert.doesNotThrow(() => assertNoAffirmativeSignOutDeletion('Выход не должен стирать облачный прогресс.'));
+  assert.throws(() => assertNoAffirmativeSignOutDeletion('Выход не удаляет её, но стирает облачный прогресс.'));
+  assert.throws(() => assertNoAffirmativeSignOutDeletion('Выход удаляет облачный прогресс.'));
 });
 
 test('uses the current page titles for reviewed sources', () => {
