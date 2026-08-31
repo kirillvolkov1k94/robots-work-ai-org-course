@@ -172,7 +172,7 @@ export function createSupabaseGateway({ config, clientFactory }) {
   async function signOut() {
     let result;
     try {
-      result = await getClient().auth.signOut();
+      result = await getClient().auth.signOut({ scope: 'local' });
     } catch {
       throw providerFailure();
     }

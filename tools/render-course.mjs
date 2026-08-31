@@ -14,7 +14,11 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function pageShell({ title, body, language = 'ru', assetPrefix, homePrefix, scriptPath = null }) {
+function pageShell({ title, body, language = 'ru', assetPrefix, homePrefix, vendorScriptPath = null, scriptPath = null }) {
+  const scripts = [
+    vendorScriptPath ? `<script src="${vendorScriptPath}"></script>` : '',
+    scriptPath ? `<script type="module" src="${scriptPath}"></script>` : '',
+  ].filter(Boolean).join('\n    ');
   return `<!doctype html>
 <html lang="${escapeHtml(language)}">
   <head>
@@ -30,7 +34,7 @@ function pageShell({ title, body, language = 'ru', assetPrefix, homePrefix, scri
     <a class="skip-link" href="#content">К содержанию</a>
     <header class="site-header"><a href="${homePrefix}index.html">Учебная система</a></header>
     <main id="content" aria-label="Материал курса">${body}</main>
-    ${scriptPath ? `<script type="module" src="${scriptPath}"></script>` : ''}
+    ${scripts}
   </body>
 </html>
 `;
@@ -87,8 +91,8 @@ async function writePage(root, segments, html) {
   await writeFile(join(directory, 'index.html'), html, 'utf8');
 }
 
-export function renderHtmlPage({ title, body, language = 'ru', assetPrefix = '../../', homePrefix = '../../', scriptPath = null }) {
-  return pageShell({ title, body, language, assetPrefix, homePrefix, scriptPath });
+export function renderHtmlPage({ title, body, language = 'ru', assetPrefix = '../../', homePrefix = '../../', vendorScriptPath = null, scriptPath = null }) {
+  return pageShell({ title, body, language, assetPrefix, homePrefix, vendorScriptPath, scriptPath });
 }
 
 export async function renderCourse(course, root) {
@@ -99,7 +103,7 @@ export async function renderCourse(course, root) {
   await Promise.all(validation.value.lessons.map((lesson) => writePage(
     root,
     ['lessons', lesson.slug],
-    renderHtmlPage({ title: lesson.title, body: renderLesson(lesson, sourcesById), language: validation.value.meta.language, scriptPath: '../../assets/lesson-page.js' }),
+    renderHtmlPage({ title: lesson.title, body: renderLesson(lesson, sourcesById), language: validation.value.meta.language, vendorScriptPath: '../../assets/vendor/supabase-js-2.112.4.umd.js', scriptPath: '../../assets/lesson-page.js' }),
   )));
 
   await Promise.all(validation.value.references.map((reference) => writePage(

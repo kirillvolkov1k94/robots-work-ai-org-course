@@ -81,6 +81,20 @@ test('sends magic links using only the configured redirect URL', async () => {
   });
 });
 
+test('signs out only this browser session without deleting course progress', async () => {
+  const { client, calls } = createClient();
+  client.auth.signOut = async (options) => {
+    calls.push({ signOut: options });
+    return { data: null, error: null };
+  };
+  const gateway = createSupabaseGateway({ config, clientFactory: () => client });
+
+  await gateway.signOut();
+
+  assert.deepEqual(calls.find((call) => call.signOut), { signOut: { scope: 'local' } });
+  assert.equal(calls.includes('delete'), false);
+});
+
 test('rejects magic-link envelopes whose user or session value has the wrong type', async () => {
   const { client } = createClient();
   client.auth.signInWithOtp = async () => ({ data: { user: 'bad', session: [] }, error: null });

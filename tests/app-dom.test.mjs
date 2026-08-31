@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { bootCourseApp, importSuccessMessage } from '../assets/app.js';
+import { createProgressRuntime } from '../assets/progress-runtime.js';
+import { createEmptyProgress } from '../assets/progress-record.js';
 import { sampleCourse } from '../content/course-data.js';
 
 class FakeElement {
@@ -103,6 +105,40 @@ test('announces successful progress import after the dashboard rerenders', async
   assert.equal(document.documentElement.lang, 'ru');
   assert.equal(status.attributes.get('aria-live'), 'polite');
   assert.equal(status.textContent, importSuccessMessage());
+});
+
+test('reports a cloud-failed import as restored local backup without stale saved state', async () => {
+  const { document, root } = fakeDocument();
+  let progress = createEmptyProgress('robots-work');
+  const store = {
+    load: () => structuredClone(progress),
+    recordCompletion() { return structuredClone(progress); },
+    importJson(text) { progress = JSON.parse(text); return { ok: true }; },
+  };
+  const runtime = createProgressRuntime({
+    courseId: 'robots-work',
+    progressStore: store,
+    cloudConfig: { url: 'https://example.supabase.co', publishableKey: 'sb_publishable_example', redirectTo: 'https://course.example.test/' },
+    gatewayFactory: () => ({
+      isConfigured: true,
+      async getCurrentUser() { return { id: 'user-1' }; },
+      async loadProgress() { return null; },
+      async saveProgress() { throw new Error('offline'); },
+      async signOut() {},
+    }),
+  });
+  await runtime.ready;
+  const app = bootCourseApp({ document, window: { localStorage: {}, document, URL: {} }, course: sampleCourse, progressStore: store, progressRuntime: runtime });
+  await app.ready;
+
+  const input = findInput(root);
+  input.files = [{ text: async () => JSON.stringify({ ...createEmptyProgress('robots-work'), updatedAt: 5, completed: { choose: { score: 100, completedAt: 5 } } }) }];
+  await input.listeners.get('change')({});
+
+  assert.equal(runtime.getSnapshot().state.progress.completed.choose.score, 100);
+  assert.equal(runtime.getSnapshot().state.status, 'retry');
+  assert.equal(root.querySelector('.status-message').textContent, importSuccessMessage());
+  assert.doesNotMatch(root.querySelector('.status-message').textContent, /в облаке/i);
 });
 
 test('shows a labelled magic-link action to a signed-out reader and reports its result safely', async () => {

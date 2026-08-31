@@ -178,7 +178,7 @@ function buildDashboard(document, window, course, store, runtime, render) {
   input.addEventListener('change', async () => {
     const file = input.files?.[0];
     if (!file) return;
-    const result = store.importJson(await file.text());
+    const result = await runtime.importProgress(await file.text());
     if (!result.ok) {
       setStatus('Импорт не выполнен: файл не соответствует формату этого курса.');
       return;

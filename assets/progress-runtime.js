@@ -112,6 +112,7 @@ export function createProgressRuntime({
     refreshSession,
     requestMagicLink,
     recordCompletion: (lessonId, score) => controller.recordCompletion(lessonId, score),
+    importProgress: (text) => controller.importProgress(text),
     retry: () => controller.retry(),
     signOut,
     subscribe(listener) {

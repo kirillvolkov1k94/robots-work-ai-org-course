@@ -57,9 +57,13 @@ test('renders navigable pages with escaped lesson content', async () => {
     assert.match(lesson, /href="\.\.\/\.\.\/index\.html"/);
     assert.match(lesson, /data-quiz-lesson="safe-title"/);
     assert.match(lesson, /name="answer"/);
+    const vendorScript = lesson.indexOf('../../assets/vendor/supabase-js-2.112.4.umd.js');
+    const lessonModule = lesson.indexOf('type="module" src="../../assets/lesson-page.js"');
+    assert.ok(vendorScript >= 0 && vendorScript < lessonModule, 'loads the UMD client before the lesson module');
     assert.match(lesson, /Следующее действие/);
     assert.match(lesson, /Fixture source/);
     assert.match(reference, /Reference fixture/);
+    assert.doesNotMatch(reference, /supabase-js|lesson-page\.js/);
     const sourceMap = await readFile(join(root, 'reference', 'source-map', 'index.html'), 'utf8');
     assert.match(sourceMap, /Карта источников/);
     assert.match(sourceMap, /Документация/);

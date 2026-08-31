@@ -138,6 +138,21 @@ export function createProgressController({ localStore, gateway, courseId, onStat
     return load();
   }
 
+  async function importProgress(text) {
+    if (typeof localStore.importJson !== 'function') throw new TypeError('localStore must implement importJson');
+    const result = localStore.importJson(text);
+    if (!result?.ok) return result;
+    const imported = localStore.load();
+    state = {
+      progress: isValidProgress(imported, courseId) ? imported : state.progress,
+      status: 'local',
+      error: null,
+    };
+    emit('local');
+    await queueCurrentSave({ throwOnError: false });
+    return result;
+  }
+
   async function retry() {
     return queueCurrentSave({ throwOnError: true });
   }
@@ -158,5 +173,5 @@ export function createProgressController({ localStore, gateway, courseId, onStat
     }
   }
 
-  return { load, getState, restore, recordCompletion, retry, requestMagicLink };
+  return { load, getState, restore, recordCompletion, importProgress, retry, requestMagicLink };
 }

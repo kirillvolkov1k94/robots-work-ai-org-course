@@ -79,3 +79,40 @@ test('restores a signed-in reader, exposes retry after a failed save, and signs 
   assert.equal(runtime.getSnapshot().account, null);
   assert.equal(store.load().completed['choose-process'].score, 100);
 });
+
+test('imports progress into the live controller before retrying a failed cloud backup', async () => {
+  const store = memoryStore();
+  const uploads = [];
+  const gateway = {
+    isConfigured: true,
+    async getCurrentUser() { return { id: 'user-1', email: 'owner@example.test' }; },
+    async loadProgress() { return null; },
+    async saveProgress(courseId, progress) {
+      uploads.push({ courseId, progress });
+      throw new Error('provider unavailable');
+    },
+    async signOut() {},
+  };
+  const runtime = createProgressRuntime({
+    courseId: 'robots-work',
+    progressStore: store,
+    cloudConfig: publicConfig,
+    gatewayFactory: () => gateway,
+  });
+  await runtime.ready;
+  const imported = {
+    ...createEmptyProgress('robots-work'),
+    updatedAt: 5,
+    completed: { choose: { score: 100, completedAt: 5 } },
+  };
+
+  assert.deepEqual(await runtime.importProgress(JSON.stringify(imported)), { ok: true });
+  assert.equal(runtime.getSnapshot().state.progress.completed.choose.score, 100);
+  assert.equal(runtime.getSnapshot().state.status, 'retry');
+  await assert.rejects(runtime.retry(), /provider unavailable/);
+  assert.deepEqual(uploads.at(-1), {
+    courseId: 'robots-work',
+    progress: imported,
+  });
+  assert.equal(runtime.getSnapshot().state.progress.completed.choose.score, 100);
+});
