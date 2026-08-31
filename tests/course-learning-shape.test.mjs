@@ -30,12 +30,14 @@ const LIFE_ANCHOR = '<section><h2>Как это выглядит в жизни</
 
 function assertLifeAnchorIsFirstInstruction(html, lessonId) {
   const articleStart = html.indexOf('<article class="lesson">');
-  const titleEnd = html.indexOf('</h1>', articleStart) + '</h1>'.length;
+  const titleStart = html.indexOf('<h1>', articleStart);
+  const titleEnd = html.indexOf('</h1>', titleStart);
   const lifeAnchor = html.indexOf(LIFE_ANCHOR, titleEnd);
   assert.ok(articleStart >= 0, `${lessonId}: lesson article is missing`);
-  assert.ok(titleEnd > articleStart, `${lessonId}: lesson title is missing`);
+  assert.ok(titleStart > articleStart, `${lessonId}: learner-visible opening h1 is missing`);
+  assert.ok(titleEnd > titleStart, `${lessonId}: lesson title closing h1 is missing`);
   assert.ok(lifeAnchor > titleEnd, `${lessonId}: life anchor is missing after title`);
-  assert.equal(html.slice(titleEnd, lifeAnchor).trim(), '', `${lessonId}: life anchor must be the first learner-visible instruction`);
+  assert.equal(html.slice(titleEnd + '</h1>'.length, lifeAnchor).trim(), '', `${lessonId}: life anchor must be the first learner-visible instruction`);
 }
 
 test('renders the life anchor as the first learner-visible instruction after every lesson title', async () => {
@@ -49,6 +51,8 @@ test('renders the life anchor as the first learner-visible instruction after eve
         '<section><h2>Supabase API</h2><p>RLS и JSON schema</p></section>\n  ' + LIFE_ANCHOR,
       );
       assert.throws(() => assertLifeAnchorIsFirstInstruction(injectedTechnicalBlock, lesson.id));
+      const missingOpeningHeading = html.replace('<h1>', '');
+      assert.throws(() => assertLifeAnchorIsFirstInstruction(missingOpeningHeading, lesson.id));
     }
   });
 });

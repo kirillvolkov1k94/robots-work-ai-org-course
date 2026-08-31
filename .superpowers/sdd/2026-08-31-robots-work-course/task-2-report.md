@@ -126,6 +126,40 @@ node --test tests/*.test.mjs
 
 Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 50/50. The count is lower than the prior 52 because three weak/overlapping term-order tests were replaced with one structural rendered-order invariant and its proof mutation. `git diff --check` was clean.
 
+## Fix round 4
+
+Base: `025d777` (`test: harden course policy and order contracts`).
+Head: `HEAD` after the single Task 2 test-hardening commit; its SHA is reported in the delivery handoff.
+
+### Corrected contracts
+
+- Planned-cloud policy rejects the contextual contradiction `Supabase подключён и работает в production` without depending on adverbs such as «уже».
+- Sign-out policy retains the correct sentence and separately rejects any non-negated delete/erase verb for cloud progress on the same sign-out sentence; it no longer strips that sentence before checking.
+- The rendered-order invariant requires a real opening `<h1>` and matching closing `</h1>` inside `<article class="lesson">` before it accepts the life anchor as first instruction.
+
+### Proof and focused result
+
+```sh
+node --test tests/course-learning-shape.test.mjs tests/course-docs.test.mjs
+```
+
+Result: 11 passed, 0 failed. In-memory proof mutations for the production-live claim, contradictory sign-out deletion and removed opening `<h1>` each threw as required; authored content stayed unchanged.
+
+### Remaining limits
+
+- Test-contract-only change: no curriculum, runtime cloud implementation, deployment or service-worker behaviour was changed.
+
+### Fix-round final verification
+
+```sh
+node tools/render-course.mjs
+node tools/check-deterministic-render.mjs
+node tools/check-internal-links.mjs
+node --test tests/*.test.mjs
+```
+
+Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 50/50; `git diff --check` was clean.
+
 ## Scope completed
 
 - Replaced the template course with the approved seven lessons in `content/course-data.js`:

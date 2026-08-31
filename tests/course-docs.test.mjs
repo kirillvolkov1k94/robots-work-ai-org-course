@@ -16,9 +16,9 @@ async function readRootFile(name) {
 function assertPlannedCloudPolicy(content) {
   assert.match(content, /запланирован[^.\n]*ещё не подключ/i);
   assert.doesNotMatch(content, /(?:уже|успешно|полностью)\s+(?:подключ|реализ|запущ|live)/i);
-  assert.match(content, /выход не удаляет/i);
-  const withoutCorrectSignOutRule = content.replace(/выход не удаляет[^.\n]*/gi, '');
-  assert.doesNotMatch(withoutCorrectSignOutRule, /(?:выход|sign out)[^.\n]*(?:удаля|стира)[^.\n]*(?:облачн|progress|запис)/i);
+  assert.doesNotMatch(content, /supabase[^.\n]*(?:подключ[её]н|работает в production|работает в продакшен|live)/i);
+  assert.match(content, /выход не удаляет её/i);
+  assert.doesNotMatch(content, /(?:выход|sign out)[^.\n]*(?<!не )(?:удаля|стира)[^.\n]*(?:облачн|progress|запис)/i);
 }
 
 test('documents the only permitted cloud deletion without weakening other data gates', async () => {
@@ -34,9 +34,9 @@ test('documents the only permitted cloud deletion without weakening other data g
     assert.doesNotMatch(content, /не хранит[^.\n]*персональн/i);
     assertPlannedCloudPolicy(content);
 
-    const falselyLive = content.replace('ещё не подключён', 'уже подключён');
+    const falselyLive = `${content} Supabase подключён и работает в production.`;
     assert.throws(() => assertPlannedCloudPolicy(falselyLive));
-    const falselyDeletingOnSignOut = content.replace('Выход не удаляет', 'Выход удаляет');
+    const falselyDeletingOnSignOut = content.replace('Выход не удаляет её.', 'Выход не удаляет её, но стирает облачный прогресс.');
     assert.throws(() => assertPlannedCloudPolicy(falselyDeletingOnSignOut));
   }
 });
