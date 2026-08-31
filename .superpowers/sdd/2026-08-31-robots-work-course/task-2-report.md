@@ -1,0 +1,58 @@
+# Task 2 report — seven-day curriculum and course documents
+
+## Scope completed
+
+- Replaced the template course with the approved seven lessons in `content/course-data.js`:
+  `choose-process`, `map-roles`, `define-contracts`, `build-evals`, `keep-run-ledger`, `set-approval-gates`, and `run-shadow-pilot`.
+- Each lesson has an observable outcome, retrieval prompt, studio/work analogy, plain explanation, named 30-minute practice artefact, at least two visible artefact checks, a non-trick quiz, explicit stop/approval boundary, source mapping and next action.
+- Added 15 public, mapped sources with author, publication date (or explicit no-date checked date), type, narrow rule, URL, access date and usage mapping. The set accurately labels official documentation, engineering practice, a field report, a standard/specification, an industry guide and research papers.
+- Added the authored course documents: `MISSION.md`, `RESOURCES.md`, `GLOSSARY.md`, `SCOPE-LOCK.md`, `ASSUMPTIONS.md`, `learning-records/README.md`, `PUBLISHING-PLAN.md`, and `README-RU.md`.
+- Kept Studio Intelligence Brief read-only/draft-only. It has no client messaging, ads, CRM, booking, payments, website or deletion rights; no learner text is stored.
+- Updated the two old test fixtures whose assertion text deliberately named template IDs/source text.
+
+## TDD evidence
+
+RED command:
+
+```sh
+node --test tests/course-learning-shape.test.mjs
+```
+
+Result: 4 passed, 1 failed. The new `ships the approved seven-lesson agent-organisation curriculum` test failed exactly because the template still exposed `define-outcome`, `shape-practice`, and `review-evidence` instead of the seven approved IDs.
+
+GREEN command:
+
+```sh
+node tools/render-course.mjs && node --test tests/course-learning-shape.test.mjs tests/course-contract.test.mjs tests/render-course.test.mjs
+```
+
+Result: 24 passed, 0 failed.
+
+## Generated files
+
+- Generated lesson pages: `lessons/choose-process/index.html`, `lessons/map-roles/index.html`, `lessons/define-contracts/index.html`, `lessons/build-evals/index.html`, `lessons/keep-run-ledger/index.html`, `lessons/set-approval-gates/index.html`, `lessons/run-shadow-pilot/index.html`.
+- Generated references: `reference/course-contract/index.html` and `reference/source-map/index.html`.
+- Removed the three stale generated template routes: `define-outcome`, `shape-practice`, `review-evidence`. No generated HTML was hand-edited.
+
+## Final verification
+
+```sh
+node tools/render-course.mjs
+node tools/check-deterministic-render.mjs
+node tools/check-internal-links.mjs
+node --test tests/*.test.mjs
+```
+
+Result: renderer completed; deterministic-render and internal-link checks passed; Node suite passed 44/44. A direct source audit reported 7 lessons, 15 sources and 1 authored reference (plus the generated source map). `git diff --check` was clean.
+
+## Self-review
+
+- Confirmed authored course material exists only in `content/course-data.js`; lesson/reference HTML was generated after it.
+- Confirmed each lesson maps to at least one known source, and no source URL carries credentials or sensitive query data (contract tests pass).
+- Confirmed no claim of flawless systems, guaranteed income, production readiness or live acceptance.
+- Confirmed documentation states data ownership, access/deletion boundary, no-service-role policy, source gaps and physical iPhone acceptance boundary.
+
+## Concerns / non-claims
+
+- Public source URLs were supplied by the approved research map; this task did not perform live web re-validation.
+- Tests and generated pages are local technical evidence only. GitHub Pages deployment, exact live URL, iPhone Home Screen/Safari acceptance and any live process approval remain outside Task 2.

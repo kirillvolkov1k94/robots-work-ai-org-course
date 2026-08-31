@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0f766e">
+    <link rel="stylesheet" href="../../assets/styles.css">
+    <link rel="manifest" href="../../manifest.webmanifest">
+    <link rel="apple-touch-icon" href="../../assets/icons/course-icon-180.png">
+    <title>Полномочия и стоп-кран</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">К содержанию</a>
+    <header class="site-header"><a href="../../index.html">Учебная система</a></header>
+    <main id="content" aria-label="Материал курса"><article class="lesson">
+  <p class="eyebrow">Урок</p>
+  <h1>Полномочия и стоп-кран</h1>
+  <p class="outcome"><strong>Результат:</strong> Ты создашь risk matrix и пакет APPROVAL_REQUEST для внешних или необратимых действий.</p>
+  <section class="retrieval"><h2>Вспомни сначала</h2><p>Вспомни Run Ledger: какие метаданные он хранит, а что туда не попадает?</p></section>
+  <section><h2>Как это выглядит в жизни</h2><p>Стажёр может подготовить платёжное поручение, но не отправляет деньги. Владелец видит сумму, получателя, причину и риск, затем решает. Полномочие — заранее видимая граница, а не доверие к красивому тексту.</p></section>
+  <section><h2>Разбираем по-простому</h2><p>Risk matrix сопоставляет действие с последствиями и решением: только черновик, остановить и уточнить или запросить одобрение. Сообщение, реклама, CRM, запись, платёж, изменение сайта и удаление данных в курсе агентом не исполняются.</p></section>
+<section><h2>Пакет на одобрение</h2><p>APPROVAL_REQUEST содержит действие, цель, затронутые данные, внешний эффект, источник запроса, альтернативу «не делать» и владельца решения. Если пакет неполный или риск неясен, статус REVIEW_REQUIRED. Одобрение нужно до действия.</p></section>
+  <section><h2>Практика</h2><ol><li>Сделай за 30 минут: заполни risk matrix минимум для пяти действий: сообщение, реклама, CRM, запись, платёж, сайт или удаление.</li><li>Создай пустой шаблон APPROVAL_REQUEST без реальных клиентских данных и назови владельца решения.</li></ol></section>
+  <section><h2>Проверка артефакта</h2><ul><li>У каждого действия есть internal draft only, REVIEW_REQUIRED или APPROVAL_REQUEST.</li><li>У внешнего или необратимого действия нет пути «выполнить автоматически».</li><li>Шаблон содержит цель, последствия, данные, альтернативу и владельца.</li></ul></section>
+  <section><h2>Проверь себя</h2><form class="quiz-form" data-quiz-lesson="set-approval-gates"><fieldset><legend>Когда нужен APPROVAL_REQUEST?</legend><label class="quiz-answer"><input type="checkbox" name="answer" value="before-impact"> До действия с внешним или необратимым эффектом.</label><label class="quiz-answer"><input type="checkbox" name="answer" value="after-impact"> После действия, чтобы сохранить отчёт.</label></fieldset><button class="button button-primary" type="submit">Проверить ответ</button><p data-quiz-status aria-live="polite"></p></form></section>
+  <section><h2>Источники</h2><ul><li><a href="https://openai.github.io/openai-agents-python/human_in_the_loop/">Human in the loop</a></li><li><a href="https://modelcontextprotocol.io/specification/2025-03-26/index">Model Context Protocol Specification</a></li><li><a href="https://genai.owasp.org/resource/securing-agentic-applications-guide-1-0/">Securing Agentic Applications Guide 1.0</a></li><li><a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf">AI Risk Management Framework 1.0</a></li></ul></section>
+  <section><h2>Следующее действие</h2><p>Завтра собери Blueprint и прими решение только о безопасном shadow pilot.</p></section>
+  <aside class="lesson-help" aria-label="Помощь по уроку"><p>Если что-то осталось непонятным, спроси агента и назови урок или конкретный фрагмент.</p></aside>
+</article></main>
+    <script type="module" src="../../assets/lesson-page.js"></script>
+  </body>
+</html>

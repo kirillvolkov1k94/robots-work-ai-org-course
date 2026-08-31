@@ -8,6 +8,15 @@ import { renderCourse } from '../tools/render-course.mjs';
 import { validateCourse } from '../tools/course-contract.mjs';
 import { withTempDir } from './helpers.mjs';
 
+test('ships the approved seven-lesson agent-organisation curriculum', () => {
+  assert.deepEqual(sampleCourse.lessons.map((lesson) => lesson.id), [
+    'choose-process', 'map-roles', 'define-contracts', 'build-evals',
+    'keep-run-ledger', 'set-approval-gates', 'run-shadow-pilot',
+  ]);
+  assert.equal(sampleCourse.meta.title, 'Роботы работают');
+  assert.equal(sampleCourse.lessons.every((lesson) => lesson.sourceIds.length > 0), true);
+});
+
 test('requires plain-life examples and proof checklists for every lesson', () => {
   const result = validateCourse(sampleCourse);
   assert.equal(result.ok, true);
@@ -23,7 +32,7 @@ test('rejects a lesson without a plain-life example', () => {
 
   const result = validateCourse(invalidCourse);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.includes('lesson define-outcome needs a life example'));
+  assert.ok(result.errors.includes('lesson choose-process needs a life example'));
 });
 
 test('rejects a lesson with fewer than two artifact checks', () => {
@@ -32,7 +41,7 @@ test('rejects a lesson with fewer than two artifact checks', () => {
 
   const result = validateCourse(invalidCourse);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.includes('lesson define-outcome needs at least two artefact checks'));
+  assert.ok(result.errors.includes('lesson choose-process needs at least two artefact checks'));
 });
 
 test('renders the new learning blocks without calling them certification', async () => {

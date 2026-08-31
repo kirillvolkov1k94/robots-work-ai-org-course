@@ -18,7 +18,7 @@ test('reports source-map drift when source evidence changes without regeneration
     await writeFile(
       sourceDataPath,
       sourceData.replace(
-        'Показывает, как связать урок с проверяемым источником и зафиксировать область его использования.',
+        'Выбор процесса, компоненты агента и границы.',
         'Изменённое описание доказательства для проверки рассинхронизации.',
       ),
     );
