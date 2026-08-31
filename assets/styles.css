@@ -77,7 +77,12 @@ button, .button, .file-button { min-height: 44px; cursor: pointer; touch-action:
 .course-mark__description { margin: 0.15rem 0 0; color: var(--graphite); font-size: 0.82rem; }
 
 .site-header { padding-top: max(var(--space-3), env(safe-area-inset-top)); padding-bottom: var(--space-2); }
-.site-header a { text-decoration: none; }
+.site-header a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+}
 
 #app, #content {
   padding-top: var(--space-4);
@@ -105,7 +110,7 @@ h1 { max-width: 16ch; margin-bottom: var(--space-3); font-size: clamp(2.45rem, 1
 h2 { margin-bottom: var(--space-2); font-size: clamp(1.25rem, 5vw, 1.75rem); line-height: 1.15; letter-spacing: -0.03em; }
 h3 { font-size: 1rem; }
 
-.eyebrow { margin-bottom: var(--space-2); color: var(--signal); font: 700 0.72rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.09em; text-transform: uppercase; }
+.eyebrow { margin-bottom: var(--space-2); color: var(--ink); font: 700 0.72rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.09em; text-transform: uppercase; }
 .hero-copy, .outcome { max-width: 61ch; color: var(--graphite); font-size: 1.06rem; }
 .outcome { padding: var(--space-3); border-left: 0.25rem solid var(--verified); background: rgb(233 239 235 / 0.72); }
 
@@ -144,10 +149,10 @@ input[type="email"] { width: 100%; min-height: 44px; margin: 0.4rem 0 0.75rem; p
 label { display: block; font-weight: 700; }
 
 .lesson-list { padding: 0; list-style: none; border-top: 1px solid var(--rule); }
-.lesson-item { display: grid; gap: 0.22rem; padding: var(--space-3) 0 var(--space-3) var(--space-3); border-bottom: 1px solid var(--rule); border-left: 0.28rem solid var(--rule); }
+.lesson-item { border-bottom: 1px solid var(--rule); border-left: 0.28rem solid var(--rule); }
 .lesson-item.is-complete { border-left-color: var(--verified); }
-.lesson-item a { font-weight: 760; }
-.lesson-status { color: var(--graphite); font: 0.76rem/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.lesson-item > a { display: flex; flex-direction: column; justify-content: center; gap: 0.22rem; width: 100%; min-height: 44px; padding: var(--space-3); font-weight: 760; }
+.lesson-status { color: var(--graphite); font: 0.76rem/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 400; }
 .status-message { min-height: 1.55em; margin: var(--space-3) 0 0; color: var(--graphite); }
 
 .backup-card > * + *, .next-card > * + *, .progress-card > * + * { margin-top: var(--space-3); }

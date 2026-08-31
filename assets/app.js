@@ -46,7 +46,8 @@ function buildLessonList(document, course, completed) {
       className: 'lesson-status',
       text: completed[lesson.id] ? `Пройдено: ${completed[lesson.id].score}%` : 'Следующий шаг',
     });
-    item.append(link, status);
+    link.append(status);
+    item.append(link);
     list.append(item);
   }
   return list;
