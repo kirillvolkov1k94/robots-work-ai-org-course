@@ -52,3 +52,49 @@ Observed: renderer completed; deterministic render passed; internal-link check p
 
 - `assets/cloud-config.js` intentionally contains empty public placeholders, so cloud progress is disabled by default.
 - No Supabase project, credentials, magic-link provider, browser UI wiring, deployment, service worker behavior, or other live resource was created or changed. The tests prove offline contracts only; they do not prove provider, email, or deployed-browser acceptance.
+
+## Fix round 1 — persistence hardening
+
+### Revision range and reproduced root causes
+
+- Base: `d546dd9579f9e78e1f3aba1b80b08070bef86a9e`.
+- Head: `HEAD` at the single cohesive `fix: harden cloud progress persistence` commit.
+- The first implementation accepted an `sb_secret_*` value because it only denied service-role wording, issued concurrent cloud writes from one controller, restored a local/remote merge without uploading it, and treated undefined provider responses as successful. It also permitted reserved JSON-own lesson keys and read completion candidates through inherited object properties.
+
+### Corrections
+
+- Config now accepts only `sb_publishable_*` public keys or a legacy JWT with `role: anon`; it rejects current `sb_secret_*`, legacy service-role and ambiguous values. Provider and redirect URLs require HTTPS except explicit localhost/loopback development.
+- Reserved lesson IDs are rejected and merge uses own-property-safe records/lookups.
+- Gateway operations require strict `{ data, error: null }` envelopes and operation-specific data shapes. Controller independently rejects undefined gateway responses, so malformed results enter `retry` rather than `saved` or `link-sent`.
+- One controller serializes snapshots and captures them on execution. Only the newest queued state can report `saved`; failed saves keep local progress and the retry path.
+- Restore persists a valid merged result locally, then uploads it when it differs from valid remote progress or when nonempty local progress has no remote record. Malformed remote data remains ignored.
+- `ASSUMPTIONS.md` now explicitly limits cloud progress to backup/reconciliation. It does not promise conflict-free simultaneous multi-device synchronization; local storage and JSON export remain available.
+
+### TDD evidence
+
+RED command:
+
+```sh
+node --test tests/progress-record.test.mjs tests/progress-controller.test.mjs tests/supabase-gateway.test.mjs
+```
+
+Observed: 13 passed, 7 failed. The failures reproduced permissive secret/HTTP config, undefined-envelope false success, concurrent save ordering, missing restore upload, reserved-key acceptance and inherited completion lookup. A focused follow-up controller RED run also showed 3 passed, 4 failed, including undefined magic-link false success.
+
+GREEN command:
+
+```sh
+node --test tests/progress-record.test.mjs tests/progress-controller.test.mjs tests/supabase-gateway.test.mjs tests/progress-store.test.mjs
+```
+
+Observed: 26 passed, 0 failed.
+
+### Final verification
+
+```sh
+npm run render
+node tools/check-deterministic-render.mjs
+node tools/check-internal-links.mjs
+node --test tests/*.test.mjs
+```
+
+Observed: renderer completed; deterministic render passed; internal-link check passed; full Node suite passed 71/71. Authored source/config/test files pass `git diff --check`; the unchanged official UMD artifact intentionally retains upstream trailing whitespace.

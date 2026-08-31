@@ -1,6 +1,7 @@
 const VERSION = 1;
 const TOP_LEVEL_KEYS = new Set(['version', 'courseId', 'updatedAt', 'completed']);
 const COMPLETION_KEYS = new Set(['score', 'completedAt']);
+const RESERVED_LESSON_IDS = new Set(['__proto__', 'constructor', 'prototype']);
 
 function isPlainObject(value) {
   return Boolean(value)
@@ -49,6 +50,7 @@ export function isValidProgress(value, courseId) {
 
   return Object.entries(value.completed).every(([lessonId, completion]) => (
     isNonEmptyString(lessonId)
+    && !RESERVED_LESSON_IDS.has(lessonId)
     && isPlainObject(completion)
     && hasOnlyKeys(completion, COMPLETION_KEYS)
     && Number.isFinite(completion.score)
@@ -63,9 +65,14 @@ export function mergeProgress(courseId, local, remote) {
   const remoteRecord = isValidProgress(remote, courseId) ? remote : null;
   if (!remoteRecord) return copyRecord(localRecord);
 
-  const completed = { ...localRecord.completed };
+  const completed = Object.create(null);
+  for (const [lessonId, completion] of Object.entries(localRecord.completed)) {
+    completed[lessonId] = copyCompletion(completion);
+  }
   for (const [lessonId, remoteCompletion] of Object.entries(remoteRecord.completed)) {
-    const localCompletion = localRecord.completed[lessonId];
+    const localCompletion = Object.hasOwn(localRecord.completed, lessonId)
+      ? localRecord.completed[lessonId]
+      : null;
     if (!localCompletion || remoteCompletion.completedAt > localCompletion.completedAt) {
       completed[lessonId] = copyCompletion(remoteCompletion);
     }

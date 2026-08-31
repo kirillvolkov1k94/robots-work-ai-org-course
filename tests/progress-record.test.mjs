@@ -23,6 +23,13 @@ test('rejects unknown keys and unsafe progress values', () => {
   assert.equal(isValidProgress(record({ choose: { score: 100, completedAt: Number.MAX_SAFE_INTEGER + 1 } }), 'robots-work'), false);
 });
 
+test('rejects reserved lesson identifiers before they can affect object prototypes', () => {
+  for (const lessonId of ['__proto__', 'constructor', 'prototype']) {
+    const candidate = JSON.parse(`{"version":1,"courseId":"robots-work","updatedAt":1,"completed":{"${lessonId}":{"score":100,"completedAt":1}}}`);
+    assert.equal(isValidProgress(candidate, 'robots-work'), false);
+  }
+});
+
 test('keeps the later completion for every lesson when cloud and device differ', () => {
   const local = record({
     choose: { score: 80, completedAt: 15 },
@@ -54,4 +61,12 @@ test('does not let malformed remote progress replace a valid device record', () 
   const malformedRemote = { ...record({}), completed: [], unexpected: true };
 
   assert.deepEqual(mergeProgress('robots-work', local, malformedRemote), local);
+});
+
+test('merges a JSON-own lesson id without reading an inherited completion', () => {
+  const remote = record({ toString: { score: 100, completedAt: 10 } }, 10);
+
+  assert.deepEqual(mergeProgress('robots-work', record({}), remote).completed, {
+    toString: { score: 100, completedAt: 10 },
+  });
 });

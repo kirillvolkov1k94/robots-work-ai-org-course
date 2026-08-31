@@ -5,9 +5,13 @@ import { createSupabaseGateway } from '../assets/supabase-gateway.js';
 
 const config = {
   url: 'https://example.supabase.co',
-  publishableKey: 'public-key',
+  publishableKey: 'sb_publishable_example',
   redirectTo: 'https://course.example.test/',
 };
+
+function progressRecord() {
+  return { version: 1, courseId: 'robots-work', updatedAt: 0, completed: {} };
+}
 
 function createClient({ user = { id: 'user-1' }, progress = null, error = null } = {}) {
   const filters = [];
@@ -23,8 +27,8 @@ function createClient({ user = { id: 'user-1' }, progress = null, error = null }
   const client = {
     auth: {
       async getUser() { return { data: { user }, error }; },
-      async signInWithOtp(options) { calls.push({ otp: options }); return { data: {}, error }; },
-      async signOut() { calls.push('signOut'); return { error }; },
+    async signInWithOtp(options) { calls.push({ otp: options }); return { data: { user: null, session: null }, error }; },
+    async signOut() { calls.push('signOut'); return { data: null, error }; },
     },
     from(name) { calls.push({ from: name }); return table; },
   };
@@ -48,6 +52,24 @@ test('fails closed when public cloud configuration is disabled or contains a ser
   await assert.rejects(mislabeledServiceRole.getCurrentUser(), /not configured/);
 });
 
+test('accepts only public Supabase key shapes and HTTPS except explicit loopback development', () => {
+  const legacyAnon = 'eyJhbGciOiJub25lIn0.eyJyb2xlIjoiYW5vbiJ9.signature';
+  const cases = [
+    [{ ...config }, true],
+    [{ url: config.url, anonKey: legacyAnon, redirectTo: config.redirectTo }, true],
+    [{ ...config, publishableKey: 'sb_secret_example' }, false],
+    [{ ...config, publishableKey: 'not-a-public-key' }, false],
+    [{ url: config.url, anonKey: 'not-a-jwt.eyJyb2xlIjoiYW5vbiJ9', redirectTo: config.redirectTo }, false],
+    [{ ...config, url: 'http://example.supabase.co' }, false],
+    [{ ...config, redirectTo: 'http://course.example.test/' }, false],
+    [{ url: 'http://127.0.0.1:54321', publishableKey: config.publishableKey, redirectTo: 'http://localhost:3000/' }, true],
+  ];
+
+  for (const [candidate, expected] of cases) {
+    assert.equal(createSupabaseGateway({ config: candidate, clientFactory: () => ({}) }).isConfigured, expected);
+  }
+});
+
 test('sends magic links using only the configured redirect URL', async () => {
   const { client, calls } = createClient();
   const gateway = createSupabaseGateway({ config, clientFactory: () => client });
@@ -60,11 +82,12 @@ test('sends magic links using only the configured redirect URL', async () => {
 });
 
 test('scopes progress reads and upserts to the authenticated user and course', async () => {
-  const { client, calls, filters } = createClient({ progress: { progress: { version: 1 } } });
+  const saved = progressRecord();
+  const { client, calls, filters } = createClient({ progress: { progress: saved } });
   const gateway = createSupabaseGateway({ config, clientFactory: () => client });
 
-  assert.deepEqual(await gateway.loadProgress('robots-work'), { version: 1 });
-  await gateway.saveProgress('robots-work', { version: 1, courseId: 'robots-work', updatedAt: 0, completed: {} });
+  assert.deepEqual(await gateway.loadProgress('robots-work'), saved);
+  await gateway.saveProgress('robots-work', saved);
 
   assert.deepEqual(filters, [
     ['course_id', 'robots-work'], ['user_id', 'user-1'],
@@ -73,10 +96,35 @@ test('scopes progress reads and upserts to the authenticated user and course', a
     upsert: {
       course_id: 'robots-work',
       user_id: 'user-1',
-      progress: { version: 1, courseId: 'robots-work', updatedAt: 0, completed: {} },
+      progress: saved,
     },
     options: { onConflict: 'course_id,user_id' },
   });
+});
+
+test('rejects undefined provider envelopes instead of treating them as successful operations', async () => {
+  const malformedClient = {
+    auth: {
+      async getUser() { return { data: { user: { id: 'user-1' } }, error: null }; },
+      async signInWithOtp() { return undefined; },
+      async signOut() { return undefined; },
+    },
+    from() {
+      return {
+        upsert() { return this; },
+        select() { return this; },
+        single: async () => undefined,
+        delete() { return this; },
+        eq() { return this; },
+      };
+    },
+  };
+  const gateway = createSupabaseGateway({ config, clientFactory: () => malformedClient });
+
+  await assert.rejects(gateway.requestMagicLink('owner@example.test'), /provider request failed/);
+  await assert.rejects(gateway.saveProgress('robots-work', progressRecord()), /provider request failed/);
+  await assert.rejects(gateway.signOut(), /provider request failed/);
+  await assert.rejects(gateway.deleteProgress('robots-work'), /provider request failed/);
 });
 
 test('fails safely for unauthenticated users and provider errors without exposing details', async () => {

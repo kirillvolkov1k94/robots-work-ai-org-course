@@ -1,17 +1,49 @@
+import { isValidProgress } from './progress-record.js';
+
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-function isServiceRoleKey(value) {
-  if (/service[-_ ]?role/ui.test(value)) return true;
-  const payload = value.split('.')[1];
-  if (!payload || typeof globalThis.atob !== 'function') return false;
+function isPlainObject(value) {
+  return Boolean(value)
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && Object.getPrototypeOf(value) === Object.prototype;
+}
+
+function decodeJwtPayload(value) {
+  const parts = value.split('.');
+  const payload = parts[1];
+  if (parts.length !== 3 || parts.some((part) => part.length === 0) || !payload || typeof globalThis.atob !== 'function') return null;
   try {
     const decoded = globalThis.atob(payload.replace(/-/gu, '+').replace(/_/gu, '/'));
-    return JSON.parse(decoded).role === 'service_role';
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+function isPublicClientKey(keyName, value) {
+  if (keyName === 'publishableKey') return /^sb_publishable_[A-Za-z0-9_-]+$/u.test(value);
+  const payload = decodeJwtPayload(value);
+  return isPlainObject(payload) && payload.role === 'anon';
+}
+
+function isHttpsOrLoopbackHttp(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol === 'https:') return true;
+    return url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
   } catch {
     return false;
   }
+}
+
+function isSuccessfulEnvelope(value) {
+  return isPlainObject(value)
+    && Object.hasOwn(value, 'data')
+    && Object.hasOwn(value, 'error')
+    && value.error === null;
 }
 
 function hasSafePublicConfig(config) {
@@ -22,14 +54,9 @@ function hasSafePublicConfig(config) {
   if (keys.length !== expected.size || keys.some((key) => !expected.has(key))) return false;
   if (Object.hasOwn(config, 'publishableKey') && Object.hasOwn(config, 'anonKey')) return false;
   if (!isNonEmptyString(config.url) || !isNonEmptyString(config[keyName]) || !isNonEmptyString(config.redirectTo)) return false;
-  if (isServiceRoleKey(config[keyName])) return false;
-  try {
-    const url = new URL(config.url);
-    const redirectTo = new URL(config.redirectTo);
-    return ['https:', 'http:'].includes(url.protocol) && ['https:', 'http:'].includes(redirectTo.protocol);
-  } catch {
-    return false;
-  }
+  return isPublicClientKey(keyName, config[keyName])
+    && isHttpsOrLoopbackHttp(config.url)
+    && isHttpsOrLoopbackHttp(config.redirectTo);
 }
 
 function providerFailure() {
@@ -66,8 +93,11 @@ export function createSupabaseGateway({ config, clientFactory }) {
     } catch {
       throw providerFailure();
     }
-    if (result?.error) throw providerFailure();
-    return result?.data?.user ?? null;
+    if (!isSuccessfulEnvelope(result) || !isPlainObject(result.data) || !Object.hasOwn(result.data, 'user')) throw providerFailure();
+    const user = result.data.user;
+    if (user === null) return null;
+    if (!isPlainObject(user) || !isNonEmptyString(user.id)) throw providerFailure();
+    return user;
   }
 
   async function requireUser() {
@@ -88,8 +118,9 @@ export function createSupabaseGateway({ config, clientFactory }) {
     } catch {
       throw providerFailure();
     }
-    if (result?.error) throw providerFailure();
-    return result?.data ?? null;
+    if (!isSuccessfulEnvelope(result) || !isPlainObject(result.data)) throw providerFailure();
+    if (!Object.hasOwn(result.data, 'user') || !Object.hasOwn(result.data, 'session')) throw providerFailure();
+    return result.data;
   }
 
   async function loadProgress(courseId) {
@@ -106,8 +137,11 @@ export function createSupabaseGateway({ config, clientFactory }) {
     } catch {
       throw providerFailure();
     }
-    if (result?.error) throw providerFailure();
-    return result?.data?.progress ?? null;
+    if (!isSuccessfulEnvelope(result)) throw providerFailure();
+    if (result.data === null) return null;
+    if (!isPlainObject(result.data) || !Object.hasOwn(result.data, 'progress')) throw providerFailure();
+    if (!isValidProgress(result.data.progress, courseId)) throw providerFailure();
+    return result.data.progress;
   }
 
   async function saveProgress(courseId, progress) {
@@ -123,8 +157,9 @@ export function createSupabaseGateway({ config, clientFactory }) {
     } catch {
       throw providerFailure();
     }
-    if (result?.error) throw providerFailure();
-    return result?.data?.progress ?? progress;
+    if (!isSuccessfulEnvelope(result) || !isPlainObject(result.data) || !Object.hasOwn(result.data, 'progress')) throw providerFailure();
+    if (!isValidProgress(result.data.progress, courseId)) throw providerFailure();
+    return result.data.progress;
   }
 
   async function signOut() {
@@ -134,7 +169,7 @@ export function createSupabaseGateway({ config, clientFactory }) {
     } catch {
       throw providerFailure();
     }
-    if (result?.error) throw providerFailure();
+    if (!isSuccessfulEnvelope(result)) throw providerFailure();
   }
 
   async function deleteProgress(courseId) {
@@ -150,7 +185,7 @@ export function createSupabaseGateway({ config, clientFactory }) {
     } catch {
       throw providerFailure();
     }
-    if (result?.error) throw providerFailure();
+    if (!isSuccessfulEnvelope(result)) throw providerFailure();
   }
 
   return {

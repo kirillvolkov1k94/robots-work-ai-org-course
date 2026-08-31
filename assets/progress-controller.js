@@ -28,6 +28,8 @@ export function createProgressController({ localStore, gateway, courseId, onStat
     status: 'local',
     error: null,
   };
+  let saveQueue = Promise.resolve();
+  let latestSaveRequest = 0;
 
   function emit(status, error = null) {
     state = { progress: copyProgress(state.progress), status, error };
@@ -42,22 +44,29 @@ export function createProgressController({ localStore, gateway, courseId, onStat
     return { progress: load(), status: state.status, error: state.error };
   }
 
-  async function saveCurrent({ throwOnError }) {
+  function queueCurrentSave({ throwOnError }) {
     if (!gateway || typeof gateway.saveProgress !== 'function') {
       emit('retry', 'Cloud progress is unavailable');
       if (throwOnError) throw new Error('Cloud progress is unavailable');
-      return null;
+      return Promise.resolve(null);
     }
-    emit('saving');
-    try {
-      await gateway.saveProgress(courseId, load());
-      emit('saved');
-      return load();
-    } catch (error) {
-      emit('retry', 'Cloud progress could not be saved');
-      if (throwOnError) throw error;
-      return null;
-    }
+    const request = ++latestSaveRequest;
+    const operation = async () => {
+      emit('saving');
+      try {
+        const snapshot = load();
+        const saved = await gateway.saveProgress(courseId, snapshot);
+        if (!isValidProgress(saved, courseId)) throw new Error('Cloud progress returned malformed response');
+        if (request === latestSaveRequest) emit('saved');
+        return saved;
+      } catch (error) {
+        emit('retry', 'Cloud progress could not be saved');
+        throw error;
+      }
+    };
+    const task = saveQueue.then(operation, operation);
+    saveQueue = task.catch(() => undefined);
+    return throwOnError ? task : task.catch(() => null);
   }
 
   async function restore() {
@@ -72,14 +81,20 @@ export function createProgressController({ localStore, gateway, courseId, onStat
     if (!gateway || typeof gateway.loadProgress !== 'function') return load();
     try {
       const remote = await gateway.loadProgress(courseId);
+      if (remote !== null && !isValidProgress(remote, courseId)) return load();
+
       const merged = mergeProgress(courseId, state.progress, remote);
-      if (!sameProgress(merged, state.progress) && typeof localStore.importJson === 'function') {
+      if (!sameProgress(merged, state.progress)) {
+        if (typeof localStore.importJson !== 'function') return load();
         const result = localStore.importJson(JSON.stringify(merged));
-        if (result?.ok) {
-          state = { ...state, progress: localStore.load() };
-          emit('local');
-        }
+        if (!result?.ok) return load();
+        state = { ...state, progress: localStore.load() };
+        emit('local');
       }
+      const shouldUpload = remote === null
+        ? Object.keys(state.progress.completed).length > 0
+        : !sameProgress(state.progress, remote);
+      if (shouldUpload) await queueCurrentSave({ throwOnError: false });
     } catch {
       // Local progress is intentionally still usable when cloud restoration fails.
     }
@@ -94,12 +109,12 @@ export function createProgressController({ localStore, gateway, courseId, onStat
       error: null,
     };
     emit('local');
-    await saveCurrent({ throwOnError: false });
+    await queueCurrentSave({ throwOnError: false });
     return load();
   }
 
   async function retry() {
-    return saveCurrent({ throwOnError: true });
+    return queueCurrentSave({ throwOnError: true });
   }
 
   async function requestMagicLink(email) {
@@ -109,6 +124,7 @@ export function createProgressController({ localStore, gateway, courseId, onStat
     }
     try {
       const result = await gateway.requestMagicLink(email);
+      if (result === null || result === undefined) throw new Error('Magic link returned malformed response');
       emit('link-sent');
       return result;
     } catch (error) {
