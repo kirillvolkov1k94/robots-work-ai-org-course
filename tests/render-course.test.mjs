@@ -47,6 +47,8 @@ test('renders navigable pages with escaped lesson content', async () => {
     assert.match(lesson, /<html lang="en">/);
     assert.match(lesson, /<main/);
     assert.match(lesson, /Вспомни сначала[\s\S]*Recall the safe output rule before reading\.[\s\S]*Part/);
+    assert.match(lesson, /A coordinator uses a short written brief\./);
+    for (const item of course.lessons[0].artifactChecklist) assert.match(lesson, new RegExp(item));
     assert.match(lesson, /Если что-то осталось непонятным, спроси агента/);
     assert.match(lesson, /href="\.\.\/\.\.\/index\.html"/);
     assert.match(lesson, /data-quiz-lesson="safe-title"/);
@@ -56,6 +58,9 @@ test('renders navigable pages with escaped lesson content', async () => {
     assert.match(reference, /Reference fixture/);
     const sourceMap = await readFile(join(root, 'reference', 'source-map', 'index.html'), 'utf8');
     assert.match(sourceMap, /Карта источников/);
+    assert.match(sourceMap, /Документация/);
+    assert.match(sourceMap, /2026-08-01/);
+    assert.match(sourceMap, /Use only the public definition\./);
   });
 });
 

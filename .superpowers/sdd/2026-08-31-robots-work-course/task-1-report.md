@@ -50,3 +50,23 @@ Modified contract, renderer, canonical data, contract/render tests, and generate
 ## Concerns
 
 The task brief listed contract/renderer/test files, but the existing canonical course data and committed generated pages predated the new required fields; updating and regenerating those files was necessary for the canonical renderer and deterministic-render suite to remain valid.
+
+## Fix round 1
+
+- Added literal modified-course negative tests proving validation rejects a missing `lifeExample` and an `artifactChecklist` with fewer than two entries.
+- Strengthened renderer assertions to verify the authored life-example body, every authored checklist item, and concrete source-map values (`sourceType`, `publishedAt`, and `rule`).
+- No production code changes were required.
+
+Verification:
+
+```text
+node --test tests/course-learning-shape.test.mjs tests/course-contract.test.mjs tests/render-course.test.mjs
+```
+
+23 passed, 0 failed.
+
+```text
+node --test tests/*.test.mjs
+```
+
+43 passed, 0 failed.

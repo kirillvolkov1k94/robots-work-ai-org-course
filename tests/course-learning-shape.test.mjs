@@ -17,6 +17,24 @@ test('requires plain-life examples and proof checklists for every lesson', () =>
   }
 });
 
+test('rejects a lesson without a plain-life example', () => {
+  const invalidCourse = structuredClone(sampleCourse);
+  delete invalidCourse.lessons[0].lifeExample;
+
+  const result = validateCourse(invalidCourse);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.includes('lesson define-outcome needs a life example'));
+});
+
+test('rejects a lesson with fewer than two artifact checks', () => {
+  const invalidCourse = structuredClone(sampleCourse);
+  invalidCourse.lessons[0].artifactChecklist = ['Only one check.'];
+
+  const result = validateCourse(invalidCourse);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.includes('lesson define-outcome needs at least two artefact checks'));
+});
+
 test('renders the new learning blocks without calling them certification', async () => {
   await withTempDir(async (root) => {
     await renderCourse(sampleCourse, root);
