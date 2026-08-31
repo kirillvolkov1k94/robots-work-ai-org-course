@@ -13,14 +13,15 @@ async function readRootFile(name) {
   return readFile(join(root.pathname, name), 'utf8');
 }
 
-test('documents public lessons and private signed-in cloud progress without free-form data', async () => {
+test('documents the only permitted cloud deletion without weakening other data gates', async () => {
   for (const name of ['MISSION.md', 'SCOPE-LOCK.md', 'README-RU.md']) {
     const content = await readRootFile(name);
     assert.match(content, /публичн/i);
     assert.match(content, /email|почт/i);
     assert.match(content, /Supabase/i);
-    assert.match(content, /прогресс/i);
-    assert.match(content, /удал/i);
+    assert.match(content, /может удалить только собственную запись облачного учебного прогресса/i);
+    assert.match(content, /выход не удаляет/i);
+    assert.match(content, /удаление клиентских, бизнес- и чужих данных, опубликованных материалов и любых иных данных запрещено/i);
     assert.match(content, /свободн|клиентск|секрет/i);
     assert.doesNotMatch(content, /не хранит[^.\n]*персональн/i);
   }

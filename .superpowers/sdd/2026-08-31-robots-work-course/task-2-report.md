@@ -47,6 +47,51 @@ node --test tests/*.test.mjs
 
 Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 50/50. Direct course audit: 7 lessons, 15 sources. `git diff --check` was clean after this report formatting correction.
 
+## Fix round 2
+
+Base: `df32fda` (`fix: clarify course safety and progress model`).
+Head: `HEAD` after the single Task 2 fix commit; its SHA is reported in the delivery handoff.
+
+### Corrected contracts
+
+- The planned signed-in learner may delete only their own cloud learning-progress record; sign-out never deletes it.
+- Course stop-rules/action gates prohibit deleting client, business, third-party and published data, or anything outside that own progress record. The scope is stated identically in `MISSION.md`, `SCOPE-LOCK.md` and `README-RU.md`; none claims that the cloud provider is already live.
+- Beginner-first protection now inspects the generated learner-visible fragment between the lesson title and the «Как это выглядит в жизни» anchor, so a framework label placed there fails the test.
+
+### Fix-round TDD evidence
+
+RED command:
+
+```sh
+node --test tests/course-learning-shape.test.mjs tests/course-docs.test.mjs
+```
+
+Result: 11 passed, 2 failed. The new failures proved the ambiguous policy wording and absent explicit action-gate rule. The newly added rendered-order negative guard passed because the prior renderer fix already placed the life anchor first.
+
+GREEN command:
+
+```sh
+node tools/render-course.mjs && node --test tests/course-learning-shape.test.mjs tests/course-docs.test.mjs tests/course-contract.test.mjs tests/render-course.test.mjs
+```
+
+Result: 32 passed, 0 failed.
+
+### Remaining limits
+
+- The deletion boundary describes a planned Supabase/RLS feature only; Task 3/7 owns its implementation and live acceptance.
+- No course action may delete any data. The sole future self-service deletion is the signed-in learner's own cloud progress record and remains unimplemented in this Task 2 change.
+
+### Fix-round final verification
+
+```sh
+node tools/render-course.mjs
+node tools/check-deterministic-render.mjs
+node tools/check-internal-links.mjs
+node --test tests/*.test.mjs
+```
+
+Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 52/52; `git diff --check` was clean.
+
 ## Scope completed
 
 - Replaced the template course with the approved seven lessons in `content/course-data.js`:

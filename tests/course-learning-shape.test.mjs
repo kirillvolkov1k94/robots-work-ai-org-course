@@ -46,6 +46,28 @@ test('shows the ordinary-life anchor before outcomes and retrieval prompts', asy
   });
 });
 
+test('does not put framework labels in the rendered instructional flow before the life anchor', async () => {
+  const frameworkLabels = /Process Passport|KPI|Coordinator|Specialist|Approval\/Archive|fixture|Run Ledger|shadow pilot/i;
+  await withTempDir(async (root) => {
+    await renderCourse(sampleCourse, root);
+    for (const lesson of sampleCourse.lessons) {
+      const html = await readFile(join(root, 'lessons', lesson.slug, 'index.html'), 'utf8');
+      const afterTitle = html.indexOf('</h1>') + '</h1>'.length;
+      const lifeAnchor = html.indexOf('<h2>Как это выглядит в жизни</h2>');
+      assert.ok(afterTitle > '</h1>'.length, lesson.id);
+      assert.ok(lifeAnchor > afterTitle, lesson.id);
+      assert.doesNotMatch(html.slice(afterTitle, lifeAnchor), frameworkLabels, lesson.id);
+    }
+  });
+});
+
+test('keeps deletion outside the learner-owned cloud progress record blocked by the course gate', () => {
+  const lesson = sampleCourse.lessons.find((item) => item.id === 'set-approval-gates');
+  const content = [...lesson.sections.map((section) => section.body), ...lesson.practice, ...lesson.artifactChecklist].join(' ');
+  assert.match(content, /запрещают удаление клиентских, бизнес- и чужих данных, опубликованных материалов и любых иных данных/i);
+  assert.match(content, /action gates|стоп-правил/i);
+});
+
 test('gives days five and seven a local tabletop run protocol with observable evidence', () => {
   for (const id of ['keep-run-ledger', 'run-shadow-pilot']) {
     const lesson = sampleCourse.lessons.find((item) => item.id === id);
