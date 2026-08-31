@@ -26,37 +26,29 @@ test('requires plain-life examples and proof checklists for every lesson', () =>
   }
 });
 
-test('keeps unfamiliar framework labels out of the first ordinary-life anchor', () => {
-  const frameworkLabels = /Process Passport|KPI|Coordinator|Specialist|Approval\/Archive|fixture|Run Ledger|shadow pilot/i;
-  for (const lesson of sampleCourse.lessons) {
-    assert.doesNotMatch(lesson.lifeExample.body, frameworkLabels, lesson.id);
-  }
-});
+const LIFE_ANCHOR = '<section><h2>Как это выглядит в жизни</h2>';
 
-test('shows the ordinary-life anchor before outcomes and retrieval prompts', async () => {
+function assertLifeAnchorIsFirstInstruction(html, lessonId) {
+  const articleStart = html.indexOf('<article class="lesson">');
+  const titleEnd = html.indexOf('</h1>', articleStart) + '</h1>'.length;
+  const lifeAnchor = html.indexOf(LIFE_ANCHOR, titleEnd);
+  assert.ok(articleStart >= 0, `${lessonId}: lesson article is missing`);
+  assert.ok(titleEnd > articleStart, `${lessonId}: lesson title is missing`);
+  assert.ok(lifeAnchor > titleEnd, `${lessonId}: life anchor is missing after title`);
+  assert.equal(html.slice(titleEnd, lifeAnchor).trim(), '', `${lessonId}: life anchor must be the first learner-visible instruction`);
+}
+
+test('renders the life anchor as the first learner-visible instruction after every lesson title', async () => {
   await withTempDir(async (root) => {
     await renderCourse(sampleCourse, root);
     for (const lesson of sampleCourse.lessons) {
       const html = await readFile(join(root, 'lessons', lesson.slug, 'index.html'), 'utf8');
-      const lifeAnchor = html.indexOf('<h2>Как это выглядит в жизни</h2>');
-      assert.ok(lifeAnchor > html.indexOf(`<h1>${lesson.title}</h1>`));
-      assert.ok(lifeAnchor < html.indexOf('<p class="outcome">'));
-      assert.ok(lifeAnchor < html.indexOf('<section class="retrieval">'));
-    }
-  });
-});
-
-test('does not put framework labels in the rendered instructional flow before the life anchor', async () => {
-  const frameworkLabels = /Process Passport|KPI|Coordinator|Specialist|Approval\/Archive|fixture|Run Ledger|shadow pilot/i;
-  await withTempDir(async (root) => {
-    await renderCourse(sampleCourse, root);
-    for (const lesson of sampleCourse.lessons) {
-      const html = await readFile(join(root, 'lessons', lesson.slug, 'index.html'), 'utf8');
-      const afterTitle = html.indexOf('</h1>') + '</h1>'.length;
-      const lifeAnchor = html.indexOf('<h2>Как это выглядит в жизни</h2>');
-      assert.ok(afterTitle > '</h1>'.length, lesson.id);
-      assert.ok(lifeAnchor > afterTitle, lesson.id);
-      assert.doesNotMatch(html.slice(afterTitle, lifeAnchor), frameworkLabels, lesson.id);
+      assertLifeAnchorIsFirstInstruction(html, lesson.id);
+      const injectedTechnicalBlock = html.replace(
+        LIFE_ANCHOR,
+        '<section><h2>Supabase API</h2><p>RLS и JSON schema</p></section>\n  ' + LIFE_ANCHOR,
+      );
+      assert.throws(() => assertLifeAnchorIsFirstInstruction(injectedTechnicalBlock, lesson.id));
     }
   });
 });

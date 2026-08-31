@@ -92,6 +92,40 @@ node --test tests/*.test.mjs
 
 Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 52/52; `git diff --check` was clean.
 
+## Fix round 3
+
+Base: `ecabd48` (`fix: clarify course deletion boundary`).
+Head: `HEAD` after the single Task 2 test-hardening commit; its SHA is reported in the delivery handoff.
+
+### Corrected contracts
+
+- Policy tests now reject a planned model if its text says it is already connected, implemented, launched or live, and reject any sign-out wording that deletes cloud progress. Each test also runs an in-memory contradiction mutation as proof.
+- The closed-list term scan is replaced by a structural invariant on generated lesson HTML: inside the lesson article, nothing except whitespace may occur between `</h1>` and the «Как это выглядит в жизни» section.
+- The structural test injects a `Supabase API / RLS / JSON schema` block before the life anchor and proves that the invariant throws. Header and metadata markup outside the lesson article are deliberately outside the check.
+
+### Proof and focused result
+
+```sh
+node --test tests/course-learning-shape.test.mjs tests/course-docs.test.mjs
+```
+
+Result: 11 passed, 0 failed. The embedded false-live, sign-out-deletes and injected-technical-block mutations each threw as required; current authored pages passed unchanged.
+
+### Remaining limits
+
+- This is test/renderer-contract hardening only. It does not change the curriculum, cloud runtime, deployment, service worker or provider state.
+
+### Fix-round final verification
+
+```sh
+node tools/render-course.mjs
+node tools/check-deterministic-render.mjs
+node tools/check-internal-links.mjs
+node --test tests/*.test.mjs
+```
+
+Result: renderer completed; deterministic render and internal-link checks passed; Node suite passed 50/50. The count is lower than the prior 52 because three weak/overlapping term-order tests were replaced with one structural rendered-order invariant and its proof mutation. `git diff --check` was clean.
+
 ## Scope completed
 
 - Replaced the template course with the approved seven lessons in `content/course-data.js`:

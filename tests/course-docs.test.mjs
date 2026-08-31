@@ -13,6 +13,14 @@ async function readRootFile(name) {
   return readFile(join(root.pathname, name), 'utf8');
 }
 
+function assertPlannedCloudPolicy(content) {
+  assert.match(content, /запланирован[^.\n]*ещё не подключ/i);
+  assert.doesNotMatch(content, /(?:уже|успешно|полностью)\s+(?:подключ|реализ|запущ|live)/i);
+  assert.match(content, /выход не удаляет/i);
+  const withoutCorrectSignOutRule = content.replace(/выход не удаляет[^.\n]*/gi, '');
+  assert.doesNotMatch(withoutCorrectSignOutRule, /(?:выход|sign out)[^.\n]*(?:удаля|стира)[^.\n]*(?:облачн|progress|запис)/i);
+}
+
 test('documents the only permitted cloud deletion without weakening other data gates', async () => {
   for (const name of ['MISSION.md', 'SCOPE-LOCK.md', 'README-RU.md']) {
     const content = await readRootFile(name);
@@ -24,6 +32,12 @@ test('documents the only permitted cloud deletion without weakening other data g
     assert.match(content, /удаление клиентских, бизнес- и чужих данных, опубликованных материалов и любых иных данных запрещено/i);
     assert.match(content, /свободн|клиентск|секрет/i);
     assert.doesNotMatch(content, /не хранит[^.\n]*персональн/i);
+    assertPlannedCloudPolicy(content);
+
+    const falselyLive = content.replace('ещё не подключён', 'уже подключён');
+    assert.throws(() => assertPlannedCloudPolicy(falselyLive));
+    const falselyDeletingOnSignOut = content.replace('Выход не удаляет', 'Выход удаляет');
+    assert.throws(() => assertPlannedCloudPolicy(falselyDeletingOnSignOut));
   }
 });
 
