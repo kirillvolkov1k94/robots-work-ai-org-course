@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Учебная система">
+  <rect width="512" height="512" rx="108" fill="#0f766e"/>
+  <path d="M112 139c52-22 108-19 144 15 36-34 92-37 144-15v224c-55-22-108-12-144 23-36-35-89-45-144-23V139Z" fill="#f4fbfa"/>
+  <path d="M256 154v214M145 190c28-9 57-7 82 7m-82 47c28-9 57-7 82 7m140-61c-28-9-57-7-82 7m82 47c-28-9-57-7-82 7" fill="none" stroke="#0f766e" stroke-linecap="round" stroke-width="18"/>
+  <circle cx="256" cy="95" r="26" fill="#f4b24c"/>
+</svg>

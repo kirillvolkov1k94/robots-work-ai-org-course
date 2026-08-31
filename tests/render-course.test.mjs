@@ -1,0 +1,62 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import test from 'node:test';
+
+import { renderCourse } from '../tools/render-course.mjs';
+import { withTempDir } from './helpers.mjs';
+
+const course = {
+  meta: { id: 'render-fixture', title: 'Render fixture', description: 'Renderer test course.', language: 'en' },
+  lessons: [{
+    id: 'safe-title',
+    slug: 'safe-title',
+    title: 'Safe <title>',
+    outcome: 'Show safe HTML output.',
+    retrieval: 'Recall the safe output rule before reading.',
+    sections: [{ heading: 'Part', body: 'Use <strong> only as text.' }],
+    practice: ['Write one sentence.'],
+    quiz: { question: 'Choose the safe answer.', answers: [{ id: 'yes', text: 'Yes', correct: true }] },
+    nextStep: 'Continue with the next practice.',
+    sourceIds: ['fixture-source'],
+  }],
+  references: [{ slug: 'reference-fixture', title: 'Reference fixture', body: 'A stable reference page.' }],
+  sources: [{
+    id: 'fixture-source',
+    title: 'Fixture source',
+    url: 'https://example.com/',
+    accessedAt: '2026-08-30',
+    usedFor: 'The fixture lesson source section.',
+  }],
+};
+
+test('renders navigable pages with escaped lesson content', async () => {
+  await withTempDir(async (root) => {
+    await renderCourse(course, root);
+
+    const lesson = await readFile(join(root, 'lessons', 'safe-title', 'index.html'), 'utf8');
+    const reference = await readFile(join(root, 'reference', 'reference-fixture', 'index.html'), 'utf8');
+
+    assert.match(lesson, /Safe &lt;title&gt;/);
+    assert.match(lesson, /<html lang="en">/);
+    assert.match(lesson, /<main/);
+    assert.match(lesson, /Вспомни сначала[\s\S]*Recall the safe output rule before reading\.[\s\S]*Part/);
+    assert.match(lesson, /Если что-то осталось непонятным, спроси агента/);
+    assert.match(lesson, /href="\.\.\/\.\.\/index\.html"/);
+    assert.match(lesson, /data-quiz-lesson="safe-title"/);
+    assert.match(lesson, /name="answer"/);
+    assert.match(lesson, /Следующее действие/);
+    assert.match(lesson, /Fixture source/);
+    assert.match(reference, /Reference fixture/);
+    const sourceMap = await readFile(join(root, 'reference', 'source-map', 'index.html'), 'utf8');
+    assert.match(sourceMap, /Карта источников/);
+  });
+});
+
+test('refuses to render a course that violates the contract', async () => {
+  await withTempDir(async (root) => {
+    const invalid = structuredClone(course);
+    invalid.lessons[0].slug = '';
+    await assert.rejects(() => renderCourse(invalid, root), /lesson slug is missing/);
+  });
+});
